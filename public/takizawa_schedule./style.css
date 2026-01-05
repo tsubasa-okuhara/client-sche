@@ -1,0 +1,209 @@
+/* ===== 基本設定 ===== */
+body {
+  font-family: sans-serif;
+  background: #f9f9f9;
+  padding: 20px;
+  margin: 0;
+}
+
+h2 {
+  text-align: center;
+  margin-bottom: 20px;
+  font-size: 20px;
+}
+
+.calendar-nav {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.calendar-nav button {
+  padding: 6px 12px;
+  margin: 0 8px;
+  font-size: 14px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  background: #fff;
+  cursor: pointer;
+}
+
+/* ===== 横スクロールラッパー ===== */
+/* ※ 既存の calendar-wrapper は未使用なら残してもOK */
+.calendar-wrapper {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  width: 100%;
+}
+
+/* ===== カレンダーの行（1週ごと） ===== */
+.calendar-row {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+
+/* ===== カレンダーセル（1日） ===== */
+.calendar-cell {
+  flex: 1;
+  min-width: 140px;
+  background-color: #ffeef7;
+  border-radius: 6px;
+  padding: 4px;
+  border: 1px solid #ccc;
+}
+
+/* ===== 日にちラベル部分 ===== */
+.date-label {
+  background: white;
+  border: 2px solid #f33;
+  border-radius: 6px;
+  padding: 6px;
+  margin-bottom: 6px;
+  font-weight: bold;
+  text-align: center;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.calendar td {
+  vertical-align: top;
+  padding: 6px;
+  background-color: #ffeef7;
+  border: 1px solid #ccc;
+}
+
+/* 各日付ボックスを白いカードにする */
+.day-box {
+  background: #fff;
+  border-radius: 8px;
+  padding: 6px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+/* 日付ラベル */
+.day-label {
+  font-weight: bold;
+  font-size: 14px;
+  text-align: center;
+  margin-bottom: 6px;
+  padding: 6px;
+  background: #fff;
+  border-radius: 6px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  border: 1px solid #ccc;
+}
+
+/* スケジュールカード */
+.schedule-entry {
+  margin: 4px 0;
+  background: #fff;
+  border-left: 4px solid #f78da7;
+  padding: 6px 8px;
+  border-radius: 6px;
+  font-size: 13px;
+  line-height: 1.4;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  overflow-wrap: break-word;
+}
+
+/* 曜日色 */
+.sunday .day-label { color: red; }
+.saturday .day-label { color: blue; }
+
+/* ===== スケジュール表示ブロック ===== */
+table {
+  table-layout: fixed;
+  width: 100%;
+  border-collapse: collapse;
+}
+
+td {
+  width: 14.28%;
+  vertical-align: top;
+}
+
+.day-box {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 4px;
+  background-color: #ffeef7;
+}
+
+.schedule-entry {
+  margin: 4px 0;
+  background: white;
+  border-left: 4px solid #f78da7;
+  padding: 4px;
+  overflow-wrap: break-word;
+}
+
+.calendar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding: 0 12px;
+  flex-wrap: wrap;
+}
+
+.calendar-header h2 {
+  font-size: 22px;
+  font-weight: bold;
+  margin: 0;
+}
+
+.calendar-nav button {
+  padding: 6px 14px;
+  font-size: 14px;
+  border: 1px solid #ff69b4;
+  border-radius: 6px;
+  background: #ffeef7;
+  color: #333;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.calendar-nav button:hover {
+  background: #fcd4e2;
+}
+
+.calendar th {
+  text-align: center;
+  font-weight: bold;
+  padding: 8px 0;
+  background: #fff;
+}
+
+/* 曜日色強調 */
+.calendar th:nth-child(1) { color: red; }
+.calendar th:nth-child(7) { color: blue; }
+
+/* ===== モバイル対応 ===== */
+@media screen and (max-width: 768px) {
+  h2 { font-size: 16px; }
+  .calendar th, .calendar td { font-size: 12px; min-height: 100px; padding: 4px; }
+  .entry { font-size: 11px; }
+  .date-label { font-size: 12px; }
+}
+
+/* 予定が無い日のラベル全体を薄グレー（順序が大事） */
+td.empty-day .day-box {
+  background-color: #eeeeee !important;
+  opacity: 0.9;
+}
+td.empty-day .day-label {
+  background-color: #eeeeee !important;
+  border-color: #ddd !important;
+  color: #666 !important;
+}
+
+/* ===== ここから追加：横スクロールを確実に効かせる ===== */
+/* HTMLで <div class="calendar-scroll"> <table class="calendar">… を包む */
+.calendar-scroll{
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  width: 100%;
+}
+/* テーブルが縮み過ぎないよう最小幅を設定（お好みで調整） */
+.calendar{
+  min-width: 980px;
+}

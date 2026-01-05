@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>子ども食堂 たまりば｜日替わり弁当メニュー</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    :root {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: #333;
+      background-color: #fdf7f0;
+    }
+
+    body {
+      margin: 0;
+      padding: 1.5rem 1rem 2.5rem;
+      max-width: 980px;
+      margin-inline: auto;
+      box-sizing: border-box;
+    }
+
+    /* ヘッダー（左バッジ＋タイトル＋価格） */
+    header {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 1.2rem;
+      align-items: center;
+      margin-bottom: 1.5rem;
+    }
+
+    .week-badge {
+      background: #ffb347;
+      color: #fff;
+      border-radius: 999px;
+      padding: 0.8rem 0.9rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-width: 70px;
+    }
+    .week-badge__month { font-size: 0.8rem; }
+    .week-badge__num   { font-size: 1.25rem; font-weight: 800; }
+    .week-badge__week  { font-size: 0.8rem; }
+
+    .title-block {
+      text-align: center;
+    }
+    .title-main {
+      font-size: 1.7rem;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      color: #1f7a3a;
+      margin-bottom: 0.15rem;
+    }
+    .title-sub {
+      font-size: 0.9rem;
+      color: #666;
+    }
+
+    .price-block {
+      text-align: right;
+      font-size: 1.2rem;
+      font-weight: 800;
+      color: #e67e22;
+      min-width: 90px;
+    }
+    .price-block span {
+      font-size: 2.1rem;
+    }
+
+    /* メニュー枠 */
+    .menu-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 1rem;
+      margin-top: 0.5rem;
+    }
+
+    .menu-card {
+      background: #fff;
+      border-radius: 14px;
+      border: 2px dashed #ffa753;
+      padding: 0.9rem 1rem 0.8rem;
+      min-height: 150px;
+      display: flex;
+      flex-direction: column;
+      gap: 0.45rem;
+    }
+
+    .menu-card__header {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.25rem 0.5rem;
+      align-items: baseline;
+      margin-bottom: 0.15rem;
+    }
+
+    .menu-card__date {
+      font-size: 1.2rem;
+      font-weight: 800;
+      color: #e67e22;
+    }
+
+    .menu-card__weekday {
+      font-size: 0.85rem;
+      font-weight: 700;
+    }
+
+    .menu-card__items {
+      font-size: 0.9rem;
+      line-height: 1.5;
+      white-space: pre-line;
+    }
+
+    .menu-card__stock {
+      margin-top: auto;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #2c3e50;
+    }
+    .menu-card__stock--low  { color: #e67e22; }
+    .menu-card__stock--zero { color: #c0392b; }
+
+    /* フッター周辺（ロゴ＋定休日など） */
+    .footer-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 1.5rem;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .logo-wrap {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      font-size: 0.9rem;
+      color: #1f7a3a;
+      font-weight: 600;
+    }
+
+    .logo-wrap img {
+      width: 60px;
+      height: auto;
+    }
+
+    .note {
+      font-size: 0.8rem;
+      color: #777;
+      text-align: right;
+    }
+
+    /* 採用広告ブロック */
+    .section-title {
+      margin-top: 2.2rem;
+      margin-bottom: 0.4rem;
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: #1f7a3a;
+    }
+
+    .recruit-card {
+      background: #ffffff;
+      border-radius: 14px;
+      padding: 1rem 1rem 1.1rem;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+      border-left: 5px solid #ffb347;
+      margin-bottom: 1.5rem;
+    }
+
+    .recruit-card p {
+      margin: 0.3rem 0;
+      font-size: 0.9rem;
+    }
+
+    .recruit-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.3rem;
+      margin: 0.4rem 0 0.7rem;
+      font-size: 0.8rem;
+    }
+
+    .tag {
+      padding: 0.2rem 0.6rem;
+      border-radius: 999px;
+      background: #fff3cf;
+      color: #b45800;
+      font-weight: 600;
+    }
+
+    .btn {
+      display: inline-block;
+      border-radius: 999px;
+      padding: 0.5rem 1.2rem;
+      font-size: 0.9rem;
+      text-decoration: none;
+      cursor: pointer;
+      background: #ffb347;
+      color: #333;
+      font-weight: 600;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+      transition: transform 0.05s ease, box-shadow 0.05s ease, opacity 0.1s ease;
+    }
+
+    .btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 3px 6px rgba(0,0,0,0.12);
+    }
+
+    .btn:active {
+      transform: translateY(0);
+      box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+      opacity: 0.9;
+    }
+
+    /* お問い合わせフォーム */
+    .contact-card {
+      background: #ffffff;
+      border-radius: 14px;
+      padding: 1rem 1.1rem 1.2rem;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+      border: 1px solid #ffd9a0;
+    }
+
+    .contact-card p {
+      margin: 0.3rem 0 0.8rem;
+      font-size: 0.9rem;
+    }
+
+    .form-row {
+      margin-bottom: 0.7rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+
+    label {
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+
+    input[type="text"],
+    input[type="email"],
+    textarea {
+      font-family: inherit;
+      font-size: 0.9rem;
+      padding: 0.4rem 0.5rem;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      box-sizing: border-box;
+    }
+
+    textarea {
+      min-height: 90px;
+      resize: vertical;
+    }
+
+    .form-note {
+      font-size: 0.75rem;
+      color: #777;
+      margin-top: 0.3rem;
+    }
+
+    @media (max-width: 640px) {
+      header {
+        grid-template-columns: 1fr 1fr;
+        grid-template-areas:
+          "badge price"
+          "title title";
+      }
+      .week-badge { grid-area: badge; }
+      .title-block { grid-area: title; }
+      .price-block { grid-area: price; text-align: right; }
+
+      .title-main { font-size: 1.5rem; }
+      .price-block span { font-size: 1.7rem; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <!-- ★ 週が変わったらここを書き換える（月・週目） -->
+    <div class="week-badge">
+      <div class="week-badge__month">6月</div>
+      <div class="week-badge__num">3</div>
+      <div class="week-badge__week">週目</div>
+    </div>
+
+    <div class="title-block">
+      <div class="title-main">日替わり弁当メニュー</div>
+      <div class="title-sub">今週のラインナップ</div>
+    </div>
+
+    <!-- ★ 価格が変わったらここを書き換える -->
+    <div class="price-block">
+      <span>500</span>円
+    </div>
+  </header>
+
+  <main>
+    <!-- メニュー表 -->
+    <section class="menu-grid" id="menuGrid">
+      <!-- JSで埋め込み -->
+    </section>
+
+    <!-- ロゴ & 注意書き -->
+    <section class="footer-row">
+      <div class="logo-wrap">
+        <img src="logo-tamari.png" alt="子ども食堂たまりばロゴ">
+        <span>子ども食堂 たまりば</span>
+      </div>
+      <div class="note">
+        土・日・祝：定休日<br>
+        残り個数は目安です。実際の状況と異なる場合があります。
+      </div>
+    </section>
+
+    <!-- 採用広告 -->
+    <h2 class="section-title">一緒に子ども食堂を支えてくれる仲間を募集しています</h2>
+    <section class="recruit-card">
+      <p>
+        ビレッジつばさでは、子ども食堂「たまりば」を一緒につくっていく
+        スタッフ・ボランティアさんを募集しています。
+      </p>
+      <p>
+        子どもが好きな方、地域で誰かの力になりたい方、
+        福祉の仕事に興味がある方、大歓迎です。
+      </p>
+
+      <div class="recruit-tags">
+        <span class="tag">未経験OK</span>
+        <span class="tag">学生・Wワーク歓迎</span>
+        <span class="tag">短時間から相談可</span>
+        <span class="tag">将来は福祉の仕事に…</span>
+      </div>
+
+      <p style="font-size:0.85rem; margin-bottom:0.7rem;">
+        お仕事内容やシフトの相談など、まずはお気軽にお問い合わせください。
+      </p>
+
+      <!-- ここは後で正式な求人ページURLに差し替え可 -->
+      <a href="#contact" class="btn">お問い合わせフォームへ</a>
+    </section>
+
+    <!-- お問い合わせフォーム -->
+    <h2 id="contact" class="section-title">お問い合わせフォーム</h2>
+    <section class="contact-card">
+      <p>
+        メニューのこと、子ども食堂のこと、お仕事のご相談など、
+        下記フォームからご連絡いただけます。
+      </p>
+
+      <!-- ★ まずは mailto でシンプルに送信（あとでGAS/Supabase連携に差し替え可能） -->
+      <form action="mailto:info@village-support.jp?subject=子ども食堂たまりば 問い合わせ" method="POST" enctype="text/plain">
+        <div class="form-row">
+          <label for="name">お名前</label>
+          <input type="text" id="name" name="お名前" required>
+        </div>
+
+        <div class="form-row">
+          <label for="email">メールアドレス</label>
+          <input type="email" id="email" name="メールアドレス" required>
+        </div>
+
+        <div class="form-row">
+          <label for="type">お問い合わせ種別</label>
+          <input type="text" id="type" name="お問い合わせ種別" placeholder="例：メニューについて／ボランティア希望 など">
+        </div>
+
+        <div class="form-row">
+          <label for="message">お問い合わせ内容</label>
+          <textarea id="message" name="お問い合わせ内容" required></textarea>
+          <div class="form-note">
+            ※ 送信ボタンを押すと、お使いのメールアプリが開きます。内容をご確認の上、送信してください。
+          </div>
+        </div>
+
+        <button type="submit" class="btn">入力内容をメールで送信</button>
+      </form>
+    </section>
+  </main>
+
+  <script>
+    // ★ ここを毎週書き換える：メニューと「残り◯個」
+    const WEEK_MENU = [
+      {
+        date: "16日",
+        weekday: "月曜",
+        lines: ["スタミナ丼", "冷やし中華"],
+        remaining: 20,
+      },
+      {
+        date: "17日",
+        weekday: "火曜",
+        lines: ["白身魚ピカタ弁当"],
+        remaining: 18,
+      },
+      {
+        date: "18日",
+        weekday: "水曜",
+        lines: ["夏野菜丼", "タコライス"],
+        remaining: 12,
+      },
+      {
+        date: "19日",
+        weekday: "木曜",
+        lines: ["山賊バーガー（鶏肉揚げ）", "鬼おろし肉うどん"],
+        remaining: 8,
+      },
+      {
+        date: "20日",
+        weekday: "金曜",
+        lines: ["とりそぼろ肉ピザ弁当"],
+        remaining: 5,
+      },
+    ];
+
+    function renderMenu() {
+      const grid = document.getElementById("menuGrid");
+      grid.innerHTML = "";
+
+      WEEK_MENU.forEach(item => {
+        const card = document.createElement("article");
+        card.className = "menu-card";
+
+        const header = document.createElement("div");
+        header.className = "menu-card__header";
+
+        const dateEl = document.createElement("div");
+        dateEl.className = "menu-card__date";
+        dateEl.textContent = item.date;
+
+        const weekdayEl = document.createElement("div");
+        weekdayEl.className = "menu-card__weekday";
+        weekdayEl.textContent = item.weekday;
+
+        header.appendChild(dateEl);
+        header.appendChild(weekdayEl);
+
+        const linesEl = document.createElement("div");
+        linesEl.className = "menu-card__items";
+        linesEl.textContent = item.lines.join("\n");
+
+        const stockEl = document.createElement("div");
+        let stockClass = "menu-card__stock";
+        if (item.remaining === 0) {
+          stockClass += " menu-card__stock--zero";
+          stockEl.textContent = "残り：0個（受付終了）";
+        } else if (item.remaining <= 5) {
+          stockClass += " menu-card__stock--low";
+          stockEl.textContent = `残り：${item.remaining}個（少なめ）`;
+        } else {
+          stockEl.textContent = `残り：${item.remaining}個`;
+        }
+        stockEl.className = stockClass;
+
+        card.appendChild(header);
+        card.appendChild(linesEl);
+        card.appendChild(stockEl);
+        grid.appendChild(card);
+      });
+    }
+
+    renderMenu();
+  </script>
+</body>
+</html>

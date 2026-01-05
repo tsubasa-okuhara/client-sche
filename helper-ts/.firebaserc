@@ -1,0 +1,8 @@
+{
+  "projects": {
+    "default": "helper-shift-ts",
+    "helper-ts": "helper-shift-ts"
+  },
+  "targets": {},
+  "etags": {}
+}

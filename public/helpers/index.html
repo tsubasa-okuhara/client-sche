@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <title>ビレッジスケジュール</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <!-- Supabase CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <link rel="icon" type="image/png" sizes="16x16" href="./favicon-16.png" />
+    <link rel="icon" type="image/png" sizes="32x32" href="./favicon-32.png" />
+    <link
+      rel="apple-touch-icon"
+      sizes="180x180"
+      href="./apple-touch-icon.png"
+    />
+    <link rel="manifest" href="./manifest.json" />
+    <script type="module" crossorigin src="/helpers/assets/index-CT_TFU18.js"></script>
+    <link rel="stylesheet" crossorigin href="/helpers/assets/index-BqtNqYby.css">
+  </head>
+
+  <body>
+    <div class="calendar-header">
+      <h2><span id="month-label">2025年12月</span> ビレッジスケジュール</h2>
+
+      <div class="calendar-nav">
+        <!-- 戻る -->
+        <a class="backBtn" href="/" aria-label="広場に戻る">← 広場に戻る</a>
+
+        <!-- ビューモード -->
+        <button id="view-month">月</button>
+        <button id="view-week">週</button>
+        <button id="view-day">日</button>
+
+        <!-- ヘルパーフィルタ -->
+        <input
+          id="helper-filter"
+          list="helper-options"
+          type="text"
+          placeholder="ヘルパー名で絞り込み"
+        />
+        <datalist id="helper-options"></datalist>
+        <button id="apply-helper-filter">絞り込み</button>
+
+        <!-- 月移動 -->
+        <button id="prev-month-btn">◀ 前月</button>
+        <button id="next-month-btn">次月 ▶</button>
+      </div>
+    </div>
+
+    <div class="calendar-wrapper">
+      <table class="calendar">
+        <thead>
+          <tr>
+            <th>日</th>
+            <th>月</th>
+            <th>火</th>
+            <th>水</th>
+            <th>木</th>
+            <th>金</th>
+            <th>土</th>
+          </tr>
+        </thead>
+        <tbody id="calendar-body"></tbody>
+      </table>
+    </div>
+
+    <!-- Vite will inject the module script -->
+  </body>
+  <!-- 検索ポップアップ -->
+  <div id="searchModal" class="modal" aria-hidden="true">
+    <div
+      class="modalCard"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="modalTitle"
+    >
+      <div class="modalHeader">
+        <h3 id="modalTitle">検索結果</h3>
+        <button id="modalClose" type="button" class="modalClose">×</button>
+      </div>
+      <div id="modalBody" class="modalBody"></div>
+    </div>
+  </div>
+</html>

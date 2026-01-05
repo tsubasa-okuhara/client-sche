@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>利用者情報 | Village ひろば</title>
+
+    <style>
+      :root {
+        --bg: #f6f7fb;
+        --card: #ffffff;
+        --text: #1f2937;
+        --muted: #6b7280;
+        --line: #e5e7eb;
+        --shadow: 0 10px 24px rgba(0, 0, 0, 0.08);
+        --shadow-sm: 0 6px 14px rgba(0, 0, 0, 0.08);
+        --radius: 16px;
+        --radius-lg: 20px;
+
+        --accent: #2563eb;
+        --accent-weak: #e8f0ff;
+        --chip-bg: #f3f4f6;
+      }
+
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans JP", sans-serif;
+        background: var(--bg);
+        color: var(--text);
+      }
+
+      a { color: inherit; text-decoration: none; }
+      a:hover { text-decoration: underline; }
+
+      .container {
+        width: min(1000px, calc(100% - 32px));
+        margin: 18px auto 60px;
+      }
+
+      .topbar {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        background: rgba(255,255,255,0.7);
+        border: 1px solid var(--line);
+        border-radius: var(--radius-lg);
+        padding: 14px 16px;
+        box-shadow: var(--shadow-sm);
+        backdrop-filter: blur(6px);
+      }
+
+      .backlink {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        width: fit-content;
+        padding: 8px 10px;
+        border-radius: 999px;
+        background: var(--card);
+        border: 1px solid var(--line);
+      }
+
+      .title {
+        display: grid;
+        gap: 4px;
+      }
+      .title h1 {
+        margin: 0;
+        font-size: 20px;
+        letter-spacing: 0.02em;
+      }
+      .title p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      .controls {
+        margin-top: 14px;
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 10px;
+      }
+
+      .search {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        padding: 10px 12px;
+        box-shadow: var(--shadow-sm);
+      }
+      .search input {
+        border: none;
+        outline: none;
+        width: 100%;
+        font-size: 14px;
+        background: transparent;
+        color: var(--text);
+      }
+      .hint {
+        font-size: 12px;
+        color: var(--muted);
+        margin: 2px 2px 0;
+      }
+
+      .grid {
+        margin-top: 14px;
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 12px;
+      }
+
+      @media (min-width: 820px) {
+        .grid {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+
+      .card {
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: var(--radius-lg);
+        padding: 14px 14px 12px;
+        box-shadow: var(--shadow);
+        cursor: pointer;
+        transition: transform 0.08s ease, box-shadow 0.08s ease;
+        position: relative;
+        overflow: hidden;
+      }
+      .card:hover { transform: translateY(-1px); }
+      .card:active { transform: translateY(0px); }
+
+      .card .name-row {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 10px;
+      }
+
+      .card .name {
+        margin: 0;
+        font-size: 16px;
+        font-weight: 700;
+      }
+
+      .badge {
+        font-size: 12px;
+        color: #1d4ed8;
+        background: var(--accent-weak);
+        border: 1px solid #dbe7ff;
+        padding: 5px 9px;
+        border-radius: 999px;
+        white-space: nowrap;
+      }
+
+      .meta {
+        margin-top: 8px;
+        display: grid;
+        gap: 8px;
+      }
+
+      .row {
+        display: grid;
+        gap: 4px;
+      }
+      .label {
+        font-size: 11px;
+        color: var(--muted);
+      }
+      .value {
+        font-size: 13px;
+        color: var(--text);
+        line-height: 1.35;
+      }
+
+      .chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+      .chip {
+        font-size: 12px;
+        padding: 6px 10px;
+        background: var(--chip-bg);
+        border: 1px solid var(--line);
+        border-radius: 999px;
+      }
+
+      .empty {
+        margin-top: 14px;
+        padding: 14px;
+        border-radius: var(--radius-lg);
+        border: 1px dashed #cbd5e1;
+        color: var(--muted);
+        background: rgba(255,255,255,0.7);
+      }
+
+      .modal-backdrop {
+        position: fixed;
+        inset: 0;
+        background: rgba(15, 23, 42, 0.45);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 18px;
+        z-index: 50;
+      }
+      .modal-backdrop.show { display: flex; }
+
+      .modal {
+        width: min(720px, 100%);
+        background: var(--card);
+        border-radius: 22px;
+        box-shadow: var(--shadow);
+        border: 1px solid rgba(255,255,255,0.35);
+        overflow: hidden;
+      }
+
+      .modal-header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 16px 16px 12px;
+        border-bottom: 1px solid var(--line);
+        background: linear-gradient(180deg, rgba(37,99,235,0.06), rgba(255,255,255,0));
+      }
+
+      .modal-title {
+        display: grid;
+        gap: 4px;
+      }
+      .modal-title h2 {
+        margin: 0;
+        font-size: 18px;
+      }
+      .modal-title p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      .close-btn {
+        border: 1px solid var(--line);
+        background: #fff;
+        padding: 8px 10px;
+        border-radius: 999px;
+        cursor: pointer;
+      }
+
+      .modal-body {
+        padding: 14px 16px 16px;
+        display: grid;
+        gap: 12px;
+      }
+
+      .detail-grid {
+        display: grid;
+        gap: 10px;
+      }
+      @media (min-width: 680px) {
+        .detail-grid {
+          grid-template-columns: 1fr 1fr;
+          gap: 12px;
+        }
+      }
+
+      .detail-box {
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        padding: 12px;
+        background: rgba(246,247,251,0.6);
+      }
+
+      .detail-box .label { margin-bottom: 4px; }
+      .detail-box .value { font-size: 14px; }
+
+      .memo {
+        white-space: pre-wrap;
+      }
+
+      .tech-note {
+        margin-top: 18px;
+        font-size: 12px;
+        color: var(--muted);
+      }
+      .tech-note code {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+        font-size: 12px;
+        background: #fff;
+        border: 1px solid var(--line);
+        padding: 2px 6px;
+        border-radius: 8px;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="container">
+      <header class="topbar">
+        <a class="backlink" href="https://client-sche.web.app/" aria-label="ひろばに戻る">
+          ← ひろばに戻る
+        </a>
+
+        <div class="title">
+          <h1>利用者情報</h1>
+          <p>利用者の基本情報を確認できます</p>
+        </div>
+      </header>
+
+      <section class="controls" aria-label="検索">
+        <div class="search">
+          <span aria-hidden="true">🔎</span>
+          <input id="searchInput" type="search" placeholder="利用者名 / 住所 / 支援内容で検索" />
+        </div>
+        <div class="hint">カードをクリックすると詳細が開きます（モーダル表示）。</div>
+      </section>
+
+      <main>
+        <div id="list" class="grid" aria-label="利用者一覧"></div>
+        <div id="empty" class="empty" style="display:none;">該当する利用者が見つかりませんでした。</div>
+      </main>
+
+      <div class="tech-note">
+        将来 Supabase 接続にする場合は、<code>loadClients()</code> 内のモック配列を
+        <code>fetch</code> に置換し、レスポンスを同じ形（id, name, address, fullAddress, contact, services, memo）で返すだけで UI は維持できます。
+      </div>
+    </div>
+
+    <div id="modalBackdrop" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <div class="modal">
+        <div class="modal-header">
+          <div class="modal-title">
+            <h2 id="modalTitle">利用者詳細</h2>
+            <p id="modalSub">基本情報</p>
+          </div>
+          <button id="closeBtn" class="close-btn" type="button" aria-label="閉じる">閉じる</button>
+        </div>
+        <div class="modal-body">
+          <div class="detail-grid">
+            <div class="detail-box">
+              <div class="label">利用者名</div>
+              <div id="dName" class="value">-</div>
+            </div>
+            <div class="detail-box">
+              <div class="label">連絡先</div>
+              <div id="dContact" class="value">-</div>
+            </div>
+            <div class="detail-box" style="grid-column: 1 / -1;">
+              <div class="label">フル住所</div>
+              <div id="dFullAddress" class="value">-</div>
+            </div>
+            <div class="detail-box" style="grid-column: 1 / -1;">
+              <div class="label">支援内容</div>
+              <div id="dServices" class="chips"></div>
+            </div>
+            <div class="detail-box" style="grid-column: 1 / -1;">
+              <div class="label">メモ</div>
+              <div id="dMemo" class="value memo">-</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const mockClients = [
+        {
+          id: 1,
+          name: "山田 太郎",
+          address: "東京都大田区",
+          fullAddress: "東京都大田区〇〇 1-2-3 〇〇マンション 101",
+          contact: "03-0000-0000（ダミー）",
+          services: ["移動支援", "身体介護"],
+          memo: "午前中希望\n玄関前に段差あり"
+        },
+        {
+          id: 2,
+          name: "佐藤 花子",
+          address: "東京都品川区",
+          fullAddress: "東京都品川区△△ 4-5-6",
+          contact: "090-0000-0000（ダミー）",
+          services: ["家事援助"],
+          memo: "買い物支援は週2回\n静かな声かけが望ましい"
+        },
+        {
+          id: 3,
+          name: "鈴木 一郎",
+          address: "東京都大田区",
+          fullAddress: "東京都大田区□□ 7-8-9",
+          contact: "03-1111-2222（ダミー）",
+          services: ["通院介助", "移動支援"],
+          memo: "病院は午前予約が多い"
+        },
+        {
+          id: 4,
+          name: "高橋 美咲",
+          address: "東京都目黒区",
+          fullAddress: "東京都目黒区◇◇ 10-11-12",
+          contact: "03-3333-4444（ダミー）",
+          services: ["身体介護"],
+          memo: "入浴介助は体調確認を優先"
+        }
+      ];
+
+      const state = {
+        clients: [],
+        filtered: [],
+        selected: null
+      };
+
+      const $list = document.getElementById("list");
+      const $empty = document.getElementById("empty");
+      const $search = document.getElementById("searchInput");
+
+      const $modalBackdrop = document.getElementById("modalBackdrop");
+      const $closeBtn = document.getElementById("closeBtn");
+      const $dName = document.getElementById("dName");
+      const $dContact = document.getElementById("dContact");
+      const $dFullAddress = document.getElementById("dFullAddress");
+      const $dServices = document.getElementById("dServices");
+      const $dMemo = document.getElementById("dMemo");
+      const $modalTitle = document.getElementById("modalTitle");
+      const $modalSub = document.getElementById("modalSub");
+
+      function escapeHtml(str) {
+        return String(str)
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;")
+          .replaceAll('"', "&quot;")
+          .replaceAll("'", "&#039;");
+      }
+
+      /**
+       * 【あとで Supabase につなぐならここを変える】
+       * - いま：mockClients を返す
+       * - 将来：Supabase REST / Edge Function 等に置換して同じ形の配列を返す
+       */
+      async function loadClients() {
+        // 将来例:
+        // const res = await fetch("/api/clients");
+        // const data = await res.json();
+        // return data;
+        return mockClients;
+      }
+
+      function renderList(items) {
+        $list.innerHTML = "";
+
+        if (!items.length) {
+          $empty.style.display = "block";
+          return;
+        }
+        $empty.style.display = "none";
+
+        const frag = document.createDocumentFragment();
+
+        items.forEach((c) => {
+          const card = document.createElement("article");
+          card.className = "card";
+          card.tabIndex = 0;
+          card.setAttribute("role", "button");
+          card.setAttribute("aria-label", `${c.name} の詳細を開く`);
+
+          const servicesPreview = (c.services || []).slice(0, 2);
+          const moreCount = Math.max(0, (c.services || []).length - servicesPreview.length);
+
+          card.innerHTML = `
+            <div class="name-row">
+              <h3 class="name">${escapeHtml(c.name)}</h3>
+              <span class="badge">詳細</span>
+            </div>
+
+            <div class="meta">
+              <div class="row">
+                <div class="label">住所（市区町村レベル）</div>
+                <div class="value">${escapeHtml(c.address || "-")}</div>
+              </div>
+
+              <div class="row">
+                <div class="label">主な支援内容</div>
+                <div class="chips">
+                  ${(servicesPreview || []).map(s => `<span class="chip">${escapeHtml(s)}</span>`).join("")}
+                  ${moreCount ? `<span class="chip">+${moreCount}</span>` : ""}
+                </div>
+              </div>
+            </div>
+          `;
+
+          const open = () => openModal(c.id);
+          card.addEventListener("click", open);
+          card.addEventListener("keydown", (e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              open();
+            }
+          });
+
+          frag.appendChild(card);
+        });
+
+        $list.appendChild(frag);
+      }
+
+      function applyFilter(keyword) {
+        const q = keyword.trim().toLowerCase();
+        if (!q) return state.clients.slice();
+
+        return state.clients.filter((c) => {
+          const hay = [
+            c.name,
+            c.address,
+            c.fullAddress,
+            (c.services || []).join(" "),
+            c.memo,
+          ]
+            .filter(Boolean)
+            .join(" ")
+            .toLowerCase();
+
+          return hay.includes(q);
+        });
+      }
+
+      function openModal(id) {
+        const c = state.clients.find((x) => x.id === id);
+        if (!c) return;
+
+        state.selected = c;
+
+        $modalTitle.textContent = c.name;
+        $modalSub.textContent = "利用者の基本情報";
+
+        $dName.textContent = c.name || "-";
+        $dContact.textContent = c.contact || "-";
+        $dFullAddress.textContent = c.fullAddress || c.address || "-";
+
+        $dServices.innerHTML = "";
+        (c.services || []).forEach((s) => {
+          const chip = document.createElement("span");
+          chip.className = "chip";
+          chip.textContent = s;
+          $dServices.appendChild(chip);
+        });
+        if (!(c.services || []).length) {
+          const chip = document.createElement("span");
+          chip.className = "chip";
+          chip.textContent = "-";
+          $dServices.appendChild(chip);
+        }
+
+        $dMemo.textContent = c.memo || "-";
+
+        $modalBackdrop.classList.add("show");
+        document.body.style.overflow = "hidden";
+        $closeBtn.focus();
+      }
+
+      function closeModal() {
+        $modalBackdrop.classList.remove("show");
+        document.body.style.overflow = "";
+        state.selected = null;
+      }
+
+      function bindEvents() {
+        $search.addEventListener("input", (e) => {
+          state.filtered = applyFilter(e.target.value);
+          renderList(state.filtered);
+        });
+
+        $closeBtn.addEventListener("click", closeModal);
+
+        $modalBackdrop.addEventListener("click", (e) => {
+          if (e.target === $modalBackdrop) closeModal();
+        });
+
+        document.addEventListener("keydown", (e) => {
+          if (e.key === "Escape" && $modalBackdrop.classList.contains("show")) {
+            closeModal();
+          }
+        });
+      }
+
+      async function init() {
+        bindEvents();
+        state.clients = await loadClients();
+        state.filtered = state.clients.slice();
+        renderList(state.filtered);
+      }
+
+      init();
+    </script>
+  </body>
+</html>

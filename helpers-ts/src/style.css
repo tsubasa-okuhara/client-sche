@@ -1,0 +1,382 @@
+/* ===== 基本設定 ===== */
+body {
+  font-family: sans-serif;
+  background: #f9f9f9;
+  padding: 20px;
+  margin: 0;
+}
+
+h2 {
+  text-align: center;
+  margin-bottom: 20px;
+  font-size: 20px;
+}
+
+.calendar-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  justify-content: center; /* 中央寄せ */
+  margin-bottom: 20px; /* 既存と同じなら残す */
+  text-align: initial; /* center指定を無効化 */
+}
+
+.calendar-nav button {
+  padding: 6px 12px;
+  margin: 0 8px;
+  font-size: 14px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  background: #fff;
+  cursor: pointer;
+}
+
+/* ===== 横スクロールラッパー ===== */
+.calendar-wrapper {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  width: 100%;
+}
+
+/* ===== カレンダーの行（1週ごと） ===== */
+.calendar-row {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+
+/* ===== カレンダーセル（1日） ===== */
+.calendar-cell {
+  flex: 1;
+  min-width: 140px;
+  background-color: #ffeef7; /* 💗 薄いピンク背景 */
+  border-radius: 6px;
+  padding: 4px;
+  border: 1px solid #ccc;
+}
+
+/* ===== 日にちラベル部分 ===== */
+.date-label {
+  background: white;
+  border: 2px solid #f33;
+  border-radius: 6px;
+  padding: 6px;
+  margin-bottom: 6px;
+  font-weight: bold;
+  text-align: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.calendar td {
+  vertical-align: top;
+  padding: 6px;
+  background-color: #ffeef7; /* 💗 薄いピンク背景 */
+  border: 1px solid #ccc;
+}
+
+/* 各日付ボックスを白いカードにする */
+.day-box {
+  background: #fff;
+  border-radius: 8px;
+  padding: 6px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+/* 日付ラベル */
+.day-label {
+  font-weight: bold;
+  font-size: 14px;
+  text-align: center;
+  margin-bottom: 6px;
+  padding: 6px;
+  background: #fff;
+  border-radius: 6px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  border: 1px solid #ccc;
+}
+
+/* スケジュールカード */
+.schedule-entry {
+  margin: 4px 0;
+  background: #fff; /* ✅ 白背景 */
+  border-left: 4px solid #f78da7; /* ✅ 優しいピンクの左ライン */
+  padding: 6px 8px;
+  border-radius: 6px;
+  font-size: 13px;
+  line-height: 1.4;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05); /* ✅ ほんのり立体感 */
+  overflow-wrap: break-word;
+}
+
+/* 曜日色 */
+.sunday .day-label {
+  color: red;
+}
+.saturday .day-label {
+  color: blue;
+}
+
+/* ===== スケジュール表示ブロック ===== */
+
+table {
+  table-layout: fixed;
+  width: 100%;
+  border-collapse: collapse;
+}
+
+td {
+  width: 14.28%;
+  vertical-align: top;
+}
+
+.day-box {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 4px;
+  background-color: #ffeef7;
+}
+
+.schedule-entry {
+  margin: 4px 0;
+  background: white;
+  border-left: 4px solid #f78da7;
+  padding: 4px;
+  overflow-wrap: break-word;
+}
+
+.calendar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding: 0 12px;
+  flex-wrap: wrap;
+}
+
+.calendar-header h2 {
+  font-size: 22px;
+  font-weight: bold;
+  margin: 0;
+}
+
+.calendar-nav button {
+  padding: 6px 14px;
+  font-size: 14px;
+  border: 1px solid #ff69b4;
+  border-radius: 6px;
+  background: #ffeef7;
+  color: #333;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.calendar-nav button:hover {
+  background: #fcd4e2;
+}
+
+.calendar th {
+  text-align: center;
+  font-weight: bold;
+  padding: 8px 0;
+  background: #fff;
+}
+
+/* 曜日色強調 */
+.calendar th:nth-child(1) {
+  color: red;
+}
+.calendar th:nth-child(7) {
+  color: blue;
+}
+
+/* === TS から使っているクラス用のスタイル === */
+
+/* 1日分のセル（背景ピンク） */
+.calendar-cell {
+  background-color: #ffeef7; /* 薄いピンク */
+  border: 1px solid #f3b5c8;
+  vertical-align: top;
+  padding: 4px;
+}
+
+/* 日付の数字部分 */
+.day-number {
+  font-weight: bold;
+  margin-bottom: 4px;
+}
+
+/* 予定リストのラッパー */
+.schedule-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* 1件の予定カード（白いカード） */
+.schedule-item {
+  background-color: #ffffff; /* ★ 白背景 */
+  border-radius: 6px;
+  padding: 4px 6px;
+  font-size: 11px;
+  line-height: 1.4;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12); /* ほんのり影 */
+  border-left: 4px solid #f78da7; /* 左に薄いピンクのライン */
+  box-sizing: border-box;
+  overflow-wrap: break-word;
+}
+
+.helpers-line {
+  margin-bottom: 2px;
+}
+
+.helpers-name {
+  font-weight: bold;
+}
+
+/* 2人以上（合同）のときだけ赤 */
+.helpers-name.joint {
+  color: red;
+}
+
+/* 1人のときは黒（お好みでグレーなど） */
+.helpers-name.single {
+  color: #333;
+}
+
+/* 週ビュー：フォーカスしていない週 */
+.calendar-cell.week-dim {
+  background-color: #f5f5f5;
+  opacity: 0.6;
+}
+
+/* 週ビュー：フォーカス週を少し強調（お好みで調整） */
+.calendar-cell.week-focus {
+  background-color: #fffcef;
+}
+
+/* 日ビュー：フォーカス日の枠を強調 */
+.calendar-cell.day-focus {
+  box-shadow: 0 0 0 2px #ff6699 inset;
+}
+
+/* ===== モバイル対応 ===== */
+@media screen and (max-width: 768px) {
+  body {
+    padding: 8px;
+  }
+
+  h2 {
+    font-size: 16px;
+    margin-bottom: 8px;
+  }
+
+  .calendar-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 0 4px;
+  }
+
+  .calendar-nav {
+    width: 100%;
+    text-align: left;
+    margin-bottom: 8px;
+  }
+
+  .calendar-nav button {
+    padding: 4px 8px;
+    font-size: 12px;
+    margin: 0 4px 4px 0;
+  }
+
+  .calendar-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* カレンダー全体は「横に広い」ままにしておく（横スクロールで見る） */
+  .calendar {
+    min-width: 800px; /* 端末幅より少し広くして、横スクロールさせる */
+  }
+
+  .calendar th,
+  .calendar td {
+    font-size: 11px;
+    padding: 2px;
+  }
+
+  .schedule-item {
+    font-size: 10px;
+    padding: 3px 4px;
+  }
+
+  .day-number {
+    font-size: 11px;
+  }
+}
+
+.backBtn {
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: #fff;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  text-decoration: none;
+  color: #333;
+}
+
+#helper-filter {
+  padding: 8px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+}
+
+.modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  z-index: 9999;
+}
+.modal.show {
+  display: flex;
+}
+.modalCard {
+  width: min(720px, 100%);
+  max-height: 80vh;
+  overflow: auto;
+  background: #fff;
+  border-radius: 14px;
+  padding: 14px 14px 10px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+}
+.modalHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 8px;
+  margin-bottom: 8px;
+}
+.modalClose {
+  border: 0;
+  background: transparent;
+  font-size: 22px;
+  cursor: pointer;
+}
+.modalBody {
+  padding: 6px 2px;
+  max-height: 70vh;
+  overflow: auto;
+}
+.modalItem {
+  padding: 10px 12px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 12px;
+  margin: 8px 0;
+  background: #fafafa;
+}

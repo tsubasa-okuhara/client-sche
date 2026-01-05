@@ -1,0 +1,58 @@
+/* ===== 基本設定 ===== */
+body { font-family: sans-serif; background:#f9f9f9; padding:20px; margin:0; }
+.container { max-width:980px; margin:0 auto; }
+h2 { margin:0 0 16px; }
+
+/* ===== カレンダー ===== */
+table { table-layout:fixed; width:100%; border-collapse:collapse; }
+.calendar th, .calendar td { vertical-align:top; padding:6px; }
+.calendar td { background:#ffeef7; border:1px solid #ccc; }
+
+.day-box { background:#fff; border-radius:8px; padding:6px; box-shadow:0 2px 4px rgba(0,0,0,.05); }
+.day-label { font-weight:bold; font-size:14px; text-align:center; margin-bottom:6px; padding:6px;
+  background:#fff; border-radius:6px; box-shadow:0 2px 4px rgba(0,0,0,.1); border:1px solid #ccc; }
+.sunday .day-label { color:red; } .saturday .day-label { color:blue; }
+
+.schedule-entry { margin:4px 0; background:#fff; border-left:4px solid #f78da7; padding:6px 8px;
+  border-radius:6px; font-size:13px; line-height:1.4; box-shadow:0 1px 3px rgba(0,0,0,.05); }
+
+/* 予定なしの日を薄グレー */
+td.empty-day .day-box { background:#eeeeee !important; opacity:.9; }
+td.empty-day .day-label { background:#eeeeee !important; border-color:#ddd !important; color:#666 !important; }
+
+/* ヘッダー */
+.calendar-header { display:flex; justify-content:space-between; align-items:center; gap:8px; margin-bottom:16px; }
+.calendar-nav button { padding:6px 14px; font-size:14px; border:1px solid #ff69b4; border-radius:6px;
+  background:#ffeef7; color:#333; cursor:pointer; transition:background .2s; }
+.calendar-nav button:hover { background:#fcd4e2; }
+button.secondary { background:#f5f5f5; padding:6px 12px; border:1px solid #ccc; border-radius:6px; cursor:pointer; }
+
+/* 月選択UI */
+.picker-title { margin:0 0 12px 4px; }
+.month-grid { display:grid; grid-template-columns:repeat(4, minmax(120px,1fr)); gap:12px; }
+.month-grid .month-btn { padding:14px 0; border-radius:10px; border:1px solid #ccc; background:#fff;
+  box-shadow:0 1px 3px rgba(0,0,0,.06); font-size:16px; cursor:pointer; }
+.month-grid .month-btn.is-current { border-color:#ff69b4; background:#ffeef7; font-weight:bold; }
+.picker-actions { display:flex; gap:8px; margin-top:12px; }
+
+/* 横スクロール用ラッパー */
+.calendar-scroll{
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  width: 100%;
+}
+
+/* テーブルが縮みすぎないよう最小幅を付与（値はお好みで調整） */
+.calendar{
+  min-width: 980px;  /* 900〜1200pxの範囲で好みの幅に調整 */
+}
+
+/* モバイル対応 */
+@media (max-width: 768px) {
+  .calendar th, .calendar td { font-size:12px; min-height:100px; padding:4px; }
+  .day-label { font-size:12px; }
+}
+
+@media (max-width: 480px){
+  .day-box { min-height: 100px; } /* 高さ確保でタップしやすく */
+}
