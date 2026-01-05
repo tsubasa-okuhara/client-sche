@@ -2,3 +2,7 @@
 # secrets
 helpers-ts/.env.local
 **/.env.local
+
+# build outputs
+helper-ts/dist/
+helpers-ts/dist/
