@@ -6,3 +6,6 @@ helpers-ts/.env.local
 # build outputs
 helper-ts/dist/
 helpers-ts/dist/
+**/.env.local
+**/node_modules/
+.DS_Store

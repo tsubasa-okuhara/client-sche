@@ -5,13 +5,52 @@ const SUPABASE_URL = "https://xwnbdlcukycihgfrfcox.supabase.co"; // あなたの
 const SUPABASE_ANON_KEY =
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh3bmJkbGN1a3ljaWhnZnJmY294Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDczMzU1ODIsImV4cCI6MjA2MjkxMTU4Mn0.WxvvQsY0Efildt9YC55eU0Nus_8E6nufB-_oZ9yMXbI";
 
-const supabase: SupabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-  auth: {
-    persistSession: false,
-    autoRefreshToken: false,
-    detectSessionInUrl: false,
-  },
-});
+const supabase: SupabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+/**
+ * グローバルステータスバナーを表示・更新する
+ * @param message メッセージ文字列
+ * @param type 'info' (青) | 'ok' (緑) | 'error' (赤)
+ */
+function setStatus(
+  message: string,
+  type: "info" | "ok" | "error" = "info"
+): void {
+  const statusEl = document.getElementById(
+    "status"
+  ) as HTMLParagraphElement | null;
+  if (!statusEl) return;
+
+  statusEl.textContent = message;
+  statusEl.className = `status-banner status-${type}`;
+
+  // エラーの場合は自動スクロール
+  if (type === "error") {
+    statusEl.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }
+}
+
+// ★ 時刻入力の厳密検証と変換ユーティリティ
+const DEFAULT_START_MIN = 6 * 60; // 06:00
+const DEFAULT_END_MIN = 24 * 60; // 24:00
+
+/**
+ * "HH:MM" 形式の時刻文字列を分単位に変換（厳密版）
+ * @param hhmm "HH:MM" 形式（例: "12:30"）
+ * @returns 分単位（例: 750）、不正なら null
+ */
+function toMinutesStrict(hhmm: string): number | null {
+  if (!hhmm) return null;
+  const m = hhmm.match(/^(\d{1,2}):(\d{2})$/);
+  if (!m) return null;
+  const hh = Number(m[1]);
+  const mm = Number(m[2]);
+  if (!Number.isInteger(hh) || !Number.isInteger(mm)) return null;
+  if (hh < 0 || hh > 24) return null;
+  if (mm < 0 || mm > 59) return null;
+  if (hh === 24 && mm !== 0) return null; // 24:00 のみ許可
+  return hh * 60 + mm;
+}
 
 /**
  * 本番(dist)の index.html が SPAシェル（<div id="app"></div> だけ）になっても
@@ -282,7 +321,6 @@ async function submitOneDay() {
     document.getElementById("helperName") as HTMLInputElement
   ).value.trim();
   const date = (document.getElementById("date") as HTMLInputElement).value;
-  const statusEl = document.getElementById("status") as HTMLParagraphElement;
 
   if (!helperName) {
     alert("氏名を入力してください");
@@ -296,8 +334,10 @@ async function submitOneDay() {
   const slotRows = document.querySelectorAll<HTMLDivElement>(".slot-row");
   const payloads: HelperShiftRequest[] = [];
 
-  // ★ 時刻フォーマット不正があったかどうかのフラグ
-  let hasInvalidTime = false;
+  // ★ 部分的な入力（不完全なスロット）を検出するフラグ
+  let hasInvalid = false;
+  // ★ 完全空でない行が1つでもあれば true
+  let hasAnyTouched = false;
 
   slotRows.forEach((row) => {
     const allday =
@@ -314,23 +354,63 @@ async function submitOneDay() {
     const s = start.trim();
     const e = end.trim();
 
-    if (!pattern) {
-      // ★ 完全に空の行（終日も時間も備考も空）は無視
-      if (!allday && !s && !e && !note) {
+    const isCompletelyEmpty = !allday && !s && !e && !note;
+    if (isCompletelyEmpty) return; // 完全に空なら無視
+
+    // 完全空ではない＝何か入力された
+    hasAnyTouched = true;
+
+    // ★ 厳密な時刻検証：start / end がどちらか入力されていたら "HH:MM" 形式で必ず完全であること
+    // pattern が '終日' なら時刻チェックスキップ
+    if (allday !== "終日" && (s || e)) {
+      // s が入力 → 厳密チェック（toMinutesStrict で null ならエラー）
+      if (s && toMinutesStrict(s) === null) {
+        hasInvalid = true;
         return;
       }
+      // e が入力 → 厳密チェック
+      if (e && toMinutesStrict(e) === null) {
+        hasInvalid = true;
+        return;
+      }
+    }
 
-      // ★ 時間も終日も入っていないのに備考だけある → 無効
-      hasInvalidTime = true;
+    // pattern が空なら部分入力（備考のみ等）とみなしてエラー
+    if (!pattern) {
+      hasInvalid = true;
       return;
     }
 
-    const { start: startMinutes, end: endMinutes } =
-      parsePatternToMinutes(pattern);
+    // 時刻補完（start/end が空なら DEFAULT を使う）
+    let finalSMin: number | null = null;
+    let finalEMin: number | null = null;
 
-    // ★ parse に失敗（どのパターンにもマッチしない） → 無効
-    if (startMinutes === null && endMinutes === null) {
-      hasInvalidTime = true;
+    if (pattern === "終日") {
+      finalSMin = 0;
+      finalEMin = DEFAULT_END_MIN;
+    } else if (pattern.startsWith("-")) {
+      // "-15:00" 形式 → start なし、end あり
+      finalSMin = DEFAULT_START_MIN;
+      finalEMin = toMinutesStrict(e);
+    } else if (pattern.endsWith("-")) {
+      // "12:00-" 形式 → start あり、end なし
+      finalSMin = toMinutesStrict(s);
+      finalEMin = DEFAULT_END_MIN;
+    } else {
+      // "12:00-15:00" 形式 → 両方あり
+      finalSMin = toMinutesStrict(s);
+      finalEMin = toMinutesStrict(e);
+    }
+
+    // 範囲チェック（開始 < 終了）
+    if (finalSMin !== null && finalEMin !== null) {
+      if (finalSMin >= finalEMin) {
+        hasInvalid = true;
+        return;
+      }
+    } else if (finalSMin === null || finalEMin === null) {
+      // toMinutesStrict が失敗した場合
+      hasInvalid = true;
       return;
     }
 
@@ -338,24 +418,25 @@ async function submitOneDay() {
       helper_name: helperName,
       date,
       pattern,
-      start_minutes: startMinutes,
-      end_minutes: endMinutes,
+      start_minutes: finalSMin,
+      end_minutes: finalEMin,
       note: note || null,
     });
   });
 
   // ★ 時刻フォーマット不正があった場合は送信を中止
-  if (hasInvalidTime) {
-    statusEl.textContent =
-      "時刻の形式が正しくないスロットがあります（例：12:00 のように入力してください）。";
+  if (hasInvalid) {
+    setStatus(
+      "エラー：終日・時間を確認してください（終日を選ぶか、開始/終了をHH:MMで両方入力してください）",
+      "error"
+    );
     alert("時間は「HH:MM」の形式で入力してください（例：12:00）。");
     return;
   }
 
-  // ★ ここで payloads.length === 0 の扱いを変える
-  //    → 「この日は休み」という意味で、既存スロットを削除して終了
-  if (payloads.length === 0) {
-    statusEl.textContent = "この日は休みとして登録中…";
+  // ★休み扱いは「何も触っていない」場合のみ（備考だけ等は hasInvalid で止まる）
+  if (!hasAnyTouched) {
+    setStatus("この日は休みとして登録中…（希望スロットなし）", "info");
 
     const { error: delError } = await supabase
       .from("helper_shift_requests")
@@ -365,16 +446,18 @@ async function submitOneDay() {
 
     if (delError) {
       console.error("delete error", delError);
-      statusEl.textContent = `削除エラー: ${delError.message}`;
+      setStatus(`削除エラー: ${delError.message}`, "error");
     } else {
-      statusEl.textContent =
-        "この日は「休み」として登録しました（希望スロットなし）✅";
+      setStatus(
+        "この日は「休み」として登録しました（希望スロットなし）✅",
+        "ok"
+      );
     }
     return;
   }
 
   // ここまで来たら、少なくとも1つは有効スロットがある
-  statusEl.textContent = "Supabaseへ送信中…";
+  setStatus("Supabaseへ送信中…", "info");
 
   // まず、その helper/date の既存スロットを全削除してから
   const { error: delError } = await supabase
@@ -385,7 +468,7 @@ async function submitOneDay() {
 
   if (delError) {
     console.error("delete error", delError);
-    statusEl.textContent = `削除エラー: ${delError.message}`;
+    setStatus(`削除エラー: ${delError.message}`, "error");
     return;
   }
 
@@ -398,9 +481,9 @@ async function submitOneDay() {
 
   if (error) {
     console.error("Supabase error", error);
-    statusEl.textContent = `エラー: ${error.message}`;
+    setStatus(`エラー: ${error.message}`, "error");
   } else {
-    statusEl.textContent = "Supabase への送信が完了しました ✅";
+    setStatus("Supabase への送信が完了しました ✅", "ok");
 
     // ★ 送信に成功したら、この月のサマリも更新しておく
     loadMonthSummaryFromSupabase().catch((e) => console.error(e));
@@ -701,5 +784,3 @@ document.addEventListener("DOMContentLoaded", () => {
   // ★ 初期状態のボタン有効/無効を決める
   updateSubmitButtonEnabled();
 });
-
-parsePatternToMinutes;

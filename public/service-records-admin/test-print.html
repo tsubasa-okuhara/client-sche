@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>サービス実施記録（管理）印刷テスト</title>
+  <link rel="stylesheet" href="./test-print.css" />
+</head>
+
+<body>
+  <header class="toolbar screen-only">
+    <div class="toolbar__left">
+      <h1 class="toolbar__title">印刷レイアウト検証（テスト）</h1>
+      <p class="toolbar__note">Chrome印刷基準。単位はmm/pt。外部ライブラリなし。</p>
+    </div>
+    <div class="toolbar__right">
+      <button type="button" class="btn" data-action="print">印刷</button>
+      <button type="button" class="btn" data-action="toggle-long">長文ケース切替</button>
+      <button type="button" class="btn" data-action="toggle-two-up">2件/1枚 切替</button>
+    </div>
+  </header>
+
+  <main id="printArea" class="print-area">
+    <section class="page" data-layout="two-up">
+      <article class="record" data-case="normal">
+        <header class="record__head">
+          <div class="head__row">
+            <div class="head__cell">
+              <div class="label">事業所名</div>
+              <div class="value">合同会社つばさ</div>
+            </div>
+            <div class="head__cell">
+              <div class="label">利用者確認</div>
+              <div class="value value--box">□ 本人　□ 家族　□ その他</div>
+            </div>
+            <div class="head__cell">
+              <div class="label">ヘルパー名</div>
+              <div class="value">奥原 翼</div>
+            </div>
+          </div>
+
+          <div class="head__row">
+            <div class="head__cell">
+              <div class="label">利用者</div>
+              <div class="value">平川 祐介 様</div>
+            </div>
+            <div class="head__cell">
+              <div class="label">サービス種別</div>
+              <div class="value">居宅（身体）</div>
+            </div>
+            <div class="head__cell">
+              <div class="label">実施日</div>
+              <div class="value">2026-01-10</div>
+            </div>
+          </div>
+
+          <div class="head__row">
+            <div class="head__cell">
+              <div class="label">開始</div>
+              <div class="value">09:00</div>
+            </div>
+            <div class="head__cell">
+              <div class="label">終了</div>
+              <div class="value">10:30</div>
+            </div>
+            <div class="head__cell">
+              <div class="label">場所</div>
+              <div class="value">自宅</div>
+            </div>
+          </div>
+        </header>
+
+        <section class="record__body">
+          <div class="block">
+            <div class="block__title">記録（本文）</div>
+            <div class="block__content">
+              身体：入浴介助。足元の安全に留意し、声かけしながら移動。洗髪時は本人のペースを尊重し、湯温確認を実施。<br>
+              家事：室内清掃（掃除機・拭き掃除）。水分摂取を促し、体調変化なし。
+            </div>
+          </div>
+
+          <div class="block block--grid">
+            <div class="block__title">特記事項</div>
+            <div class="block__content">
+              転倒リスク：低。帰宅時：落ち着いている。次回：浴室マット要確認。
+            </div>
+          </div>
+        </section>
+
+        <footer class="record__foot">
+          <div class="sign">
+            <div class="label">管理者確認</div>
+            <div class="value value--line"></div>
+          </div>
+          <div class="sign">
+            <div class="label">利用者署名</div>
+            <div class="value value--line"></div>
+          </div>
+        </footer>
+      </article>
+
+      <article class="record" data-case="normal" id="record2">
+        <header class="record__head">
+          <div class="head__row">
+            <div class="head__cell">
+              <div class="label">事業所名</div>
+              <div class="value">合同会社つばさ</div>
+            </div>
+            <div class="head__cell">
+              <div class="label">利用者確認</div>
+              <div class="value value--box">□ 本人　□ 家族　□ その他</div>
+            </div>
+            <div class="head__cell">
+              <div class="label">ヘルパー名</div>
+              <div class="value">大島 潤</div>
+            </div>
+          </div>
+
+          <div class="head__row">
+            <div class="head__cell">
+              <div class="label">利用者</div>
+              <div class="value">池田 崇人 様</div>
+            </div>
+            <div class="head__cell">
+              <div class="label">サービス種別</div>
+              <div class="value">移動支援</div>
+            </div>
+            <div class="head__cell">
+              <div class="label">実施日</div>
+              <div class="value">2026-01-10</div>
+            </div>
+          </div>
+
+          <div class="head__row">
+            <div class="head__cell">
+              <div class="label">開始</div>
+              <div class="value">14:50</div>
+            </div>
+            <div class="head__cell">
+              <div class="label">終了</div>
+              <div class="value">16:50</div>
+            </div>
+            <div class="head__cell">
+              <div class="label">場所</div>
+              <div class="value">まごめ園→自宅</div>
+            </div>
+          </div>
+        </header>
+
+        <section class="record__body">
+          <div class="block">
+            <div class="block__title">記録（本文）</div>
+            <div class="block__content">
+              送迎：車内では落ち着いて過ごされ、到着まで安定。乗降時は段差に注意して誘導。<br>
+              連絡：到着時刻を共有し、次回予定を確認。
+            </div>
+          </div>
+
+          <div class="block block--grid">
+            <div class="block__title">特記事項</div>
+            <div class="block__content">
+              二人付：対応済。乗車車両：フリード（紺）。
+            </div>
+          </div>
+        </section>
+
+        <footer class="record__foot">
+          <div class="sign">
+            <div class="label">管理者確認</div>
+            <div class="value value--line"></div>
+          </div>
+          <div class="sign">
+            <div class="label">利用者署名</div>
+            <div class="value value--line"></div>
+          </div>
+        </footer>
+      </article>
+    </section>
+  </main>
+
+  <script src="./test-print.js"></script>
+</body>
+</html>

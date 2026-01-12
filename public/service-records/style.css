@@ -113,6 +113,7 @@ button.ghost {
   position: fixed;
   inset: 0;
   display: none;
+  pointer-events: none;
   align-items: center;
   justify-content: center;
   padding: 20px;
@@ -122,6 +123,7 @@ button.ghost {
 
 .modal-backdrop.is-open {
   display: flex;
+  pointer-events: auto;
 }
 
 .modal {
@@ -452,4 +454,42 @@ textarea[name="memo"]:focus {
   .topbar, .card:not(#printCard){ display:none !important; }
   #printCard{ display:block !important; }
   .paper{ border:none; padding:0; }
+}
+
+/* 実行中ボタンの見た目（任意） */
+button.is-busy {
+  opacity: 0.7;
+  cursor: progress;
+}
+
+/* モーダルが hidden の時はクリックを必ず通す（重要） */
+#confirmModal[aria-hidden="true"] {
+  display: none !important;
+  pointer-events: none !important;
+}
+
+/* ===== confirm modal click safety ===== */
+#confirmModal {
+  display: none;
+  pointer-events: none; /* 閉じてる時は絶対クリックを奪わない */
+}
+#confirmModal.is-open {
+  display: flex;
+  pointer-events: auto;
+}
+
+/* save disabled styling */
+button.is-disabled,
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.is-disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+button.is-busy {
+  opacity: 0.75;
+  cursor: progress;
 }

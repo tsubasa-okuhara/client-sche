@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <title>サービス記録（管理）</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+
+  <body>
+    <header class="topbar no-print">
+      <a class="back" href="https://client-sche.web.app/">← ひろばに戻る</a>
+      <div class="titleBlock">
+        <h1>サービス記録（管理）</h1>
+        <div class="sub">利用者別に並べ替え／まとめて印刷</div>
+      </div>
+      <div class="actions">
+        <button class="ghost" type="button">再読み込み</button>
+        <button type="button">まとめて印刷</button>
+        <button class="danger ghost" type="button">ログアウト</button>
+      </div>
+    </header>
+
+    <main class="wrap">
+      <section class="card no-print">
+        <h2>ログイン</h2>
+        <p class="hint">管理者（helpers.is_admin=true）のみ閲覧できます。</p>
+
+        <div class="row">
+          <input id="email" type="email" placeholder="管理者メール" />
+          <button id="sendLink">リンク送信</button>
+          <button id="checkSession" class="ghost">ログイン確認</button>
+        </div>
+        <p id="authStatus" class="status"></p>
+      </section>
+
+      <section id="panel" class="card" style="display:none;">
+        <div class="filters no-print">
+          <label class="label">期間</label>
+          <input id="fromDate" type="date" />
+          <span>〜</span>
+          <input id="toDate" type="date" />
+          <button id="applyRange" class="ghost">期間で絞り込み</button>
+
+          <label class="label" style="margin-left: 10px;">利用者</label>
+          <input id="clientFilter" type="text" placeholder="例：齋藤" />
+          <button id="applyClient" class="ghost">絞り込み</button>
+        </div>
+
+        <p id="meta" class="hint"></p>
+        <div class="toolbar no-print">
+          <button id="reloadBtn" type="button">再読み込み</button>
+          <button id="printBtn" type="button">まとめて印刷</button>
+          <button id="logoutBtn" type="button">ログアウト</button>
+        </div>
+        <div id="groups" class="no-print"></div>
+      </section>
+
+      <!-- 印刷用（2枚/ページ）: JS が paperWrap を挿入 -->
+      <section id="printArea" class="print-area"></section>
+    </main>
+
+    <script type="module" src="./main.js?v=admin-20260107-01"></script>
+  </body>
+</html>

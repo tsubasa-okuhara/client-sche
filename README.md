@@ -15,3 +15,9 @@ cd helpers-ts
 npm install
 npm run dev
 ```
+
+## 運用（GAS）
+
+- 運用入口：cronMain（15 分トリガー）
+- 希望シフト同期：runHelperShiftSync → importHelperShiftsHereFromSupabase
+- 同時実行防止：LockService 使用（cronMain 内）

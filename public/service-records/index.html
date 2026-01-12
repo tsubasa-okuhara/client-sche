@@ -34,14 +34,15 @@
       </section>
 
       <section class="card">
-        <h2>1) 今日の移動予定を選ぶ</h2>
-        <p class="hint">下の一覧から、記録する予定を1つ選んでください。</p>
+        <h2>1) サービス記録 未記入一覧</h2>
+        <p class="hint">未記入（未作成）の予定だけ表示します。記録する予定を1つ選んでください。</p>
         <div class="row">
-          <button id="loadMoves">予定を読み込む</button>
+          <button id="loadMoves">未記入一覧を読み込む</button>
         </div>
         <div id="movesList" class="movesList"></div>
+        <!-- 予定一覧の取得件数/期間などの表示（main.js が参照） -->
+        <div id="movesResult" class="status"></div>
         <p id="movesSelected" class="status">選択中の予定：なし</p>
-        <div id="movesMeta" class="status"></div>
       </section>
 
       <section id="fnCard" class="card" style="display: none">
@@ -370,14 +371,14 @@
         <div id="resultCard" class="note-card">
           <pre id="resultSummary" class="note-text"></pre>
         </div>
-        <details class="resultDetails">
+        <details class="resultDetails" data-admin-only>
           <summary>詳細（管理者向け：JSON）</summary>
           <pre id="result" class="pre"></pre>
         </details>
       </section>
 
       <!-- ===== 帳票プレビュー ===== -->
-      <section class="card" id="printCard" style="display:none">
+      <section class="card" id="printCard" data-admin-only style="display:none">
         <div class="row" style="justify-content: space-between; align-items:center;">
           <h2 style="margin:0">帳票プレビュー</h2>
           <button id="printBtn" class="ghost">印刷 / PDF</button>

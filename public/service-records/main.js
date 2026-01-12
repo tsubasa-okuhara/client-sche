@@ -13,6 +13,13 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
   },
 });
 
+// ===== debug helper =====
+function dbg(label, obj) {
+  try {
+    console.log(`[service-records] ${label}`, obj ?? "");
+  } catch (_) {}
+}
+
 // iPhone 404 切り分け用デバッグ表示
 function debugShowUrls() {
   const fnUrl = `${SUPABASE_URL}/functions/v1/parse-service-note-step`;
@@ -33,6 +40,17 @@ debugShowUrls();
 // このページのURLに戻す（本番URLに合わせる）
 const REDIRECT_TO = "https://client-sche.web.app/service-records/";
 
+// ===== init guard (二重読込の保険) =====
+// 状況判定: デバッグ（イベント二重登録・二重初期化の再発防止）
+// 役割: ランタイム防御（初期化は1回だけ）
+// 最適解: 2回目以降は即停止（イベントが二重に付くのを根本排除）
+if (window.__serviceRecordsInit) {
+  console.warn("[service-records] already initialized");
+  // ここで以降の初期化（イベント登録など）を止める
+  throw new Error("service-records already initialized");
+}
+window.__serviceRecordsInit = true;
+
 // DOM
 const $email = document.getElementById("email");
 const $sendLink = document.getElementById("sendLink");
@@ -46,6 +64,7 @@ const $stepId =
   null;
 const $routeInput = document.getElementById("routeInput");
 const $answer = $routeInput || document.getElementById("answer");
+const $memo = document.getElementById("memo");
 const $invoke = document.getElementById("invoke");
 const $saveNote = document.getElementById("saveNote");
 const $result = document.getElementById("result"); // 旧（残っててもOK）
@@ -55,12 +74,19 @@ const $resultFacts = document.getElementById("resultFacts");
 const $resultRaw = document.getElementById("resultRaw");
 const $resultSummaryEdit = document.getElementById("resultSummaryEdit");
 const $loadMoves = document.getElementById("loadMoves");
-const $movesResult = document.getElementById("movesResult");
+// movesResult が無い版（movesMeta 等）でも動くように吸収
+const $movesResult =
+  document.getElementById("movesResult") ||
+  document.getElementById("movesMeta") ||
+  document.getElementById("movesStatus") ||
+  null;
 const $movesList = document.getElementById("movesList");
 const $movesSelected = document.getElementById("movesSelected");
 const $confirmModal = document.getElementById("confirmModal");
 const $confirmCancel = document.getElementById("confirmCancel");
 const $confirmOk = document.getElementById("confirmOk");
+// 管理者UI
+const $adminOnlyEls = Array.from(document.querySelectorAll("[data-admin-only]"));
 // 帳票DOM
 const $printCard = document.getElementById("printCard");
 const $printBtn = document.getElementById("printBtn");
@@ -84,6 +110,41 @@ let selectedMove = null;
 let movesCache = [];
 let selectedTask = null;
 let savingLock = false;
+// invoke 二度押し防止
+let invokeInFlight = false;
+let isAdmin = false;
+
+// ===== save enable/disable =====
+function canSaveNow() {
+  return !!(selectedMove?.id && lastAI?.fields && lastAI?.summary);
+}
+
+function refreshSaveUI() {
+  if (!$saveNote) return;
+  const ok = canSaveNow();
+  // savingLock 中は常に disable
+  $saveNote.disabled = savingLock || !ok;
+  $saveNote.classList.toggle("is-disabled", !ok);
+}
+
+function setSaveBusy(isBusy) {
+  savingLock = !!isBusy;
+  if (!$saveNote) return;
+  $saveNote.disabled = !!isBusy || !canSaveNow();
+  $saveNote.classList.toggle("is-busy", !!isBusy);
+  $saveNote.textContent = isBusy ? "保存中…" : "確定して保存";
+}
+
+function setAdminUI(flag) {
+  isAdmin = !!flag;
+  // 管理者のみ表示
+  $adminOnlyEls.forEach((el) => {
+    el.style.display = isAdmin ? "" : "none";
+  });
+
+  // 非管理者は、帳票プレビューは常に非表示（生成されても出さない）
+  if (!isAdmin && $printCard) $printCard.style.display = "none";
+}
 
 function setStatus(msg) {
   $status.textContent = msg;
@@ -121,6 +182,85 @@ function setSummaryText(text) {
   $resultSummary.textContent = text || "";
 }
 
+function setInvokeBusy(isBusy) {
+  if (!$invoke) return;
+  $invoke.disabled = !!isBusy;
+  $invoke.classList.toggle("is-busy", !!isBusy);
+  $invoke.textContent = isBusy ? "記録文を作成中…" : "記録文を作成";
+  $invoke.dataset.busy = isBusy ? "1" : "0";
+}
+
+// 透明なモーダルが“押せない”原因になることがあるので、念のため閉じる
+function forceCloseConfirmModalIfAny() {
+  const el = document.getElementById("confirmModal");
+  if (!el) return;
+  el.classList.remove("is-open");
+  el.setAttribute("aria-hidden", "true");
+  el.style.display = "none";
+}
+
+// =============================
+// 経路判定 & 文言正規化（ヘルパー向け）
+// =============================
+function normalizeText_(s) {
+  return String(s || "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+// ③ 帳票（主な援助内容/備考）に出す前の最終正規化
+// - 「車」系ワードは帳票上は "バス" 扱いに統一（文言ブレ防止）
+// - 遊具/公園ワードは "公園を散歩した" に統一（主な援助内容の簡潔化）
+function normalizeForPaper_(text) {
+  let t = normalizeText_(text);
+  if (!t) return t;
+
+  // ▼ 車系 → バス（※「車椅子」は誤変換しない）
+  t = t.replace(/車(?!椅子)/g, "バス");
+  t = t.replace(/(カーシェア|タクシー|送迎|プリウス|フリード|軽|🚗)/g, "バス");
+
+  // ▼ 公園/遊具 → 公園を散歩した（行動の要約に寄せる）
+  const hasPlay =
+    /(滑り台|すべり台|ブランコ|鉄棒|ジャングルジム|遊具|公園)/.test(t);
+  if (hasPlay) {
+    // 既に「公園を散歩した」が入っていればそのまま、無ければ差し替え
+    if (!/公園を散歩した/.test(t)) {
+      // 文章の中に混ざっていても「公園を散歩した」に寄せる（短文化）
+      t = t.replace(
+        /(滑り台|すべり台|ブランコ|鉄棒|ジャングルジム|遊具|公園).*$/g,
+        "公園を散歩した"
+      );
+      // 上の置換で変になった場合の保険（丸ごと置換）
+      if (!t) t = "公園を散歩した";
+    }
+  }
+
+  return t;
+}
+
+// ① 経路（pill）判定
+// - 電車/JR/地下鉄/東急/線 → train
+// - バス/都バス/車/送迎/タクシー/カーシェア/🚗 → bus 扱い
+// - 徒歩/歩/散歩 → walk
+// - その他 → other
+function detectRouteCategory_(text) {
+  const t = normalizeText_(text);
+  if (!t) return "other";
+
+  // 優先: 電車系
+  if (/(電車|JR|地下鉄|東急|線\b)/i.test(t)) return "train";
+
+  // バス系（※ 車関係は全部バス扱い）
+  if (/(バス|都バス|車|送迎|タクシー|カーシェア|🚗)/i.test(t)) return "bus";
+
+  // 徒歩系
+  if (/(徒歩|歩|散歩)/i.test(t)) return "walk";
+
+  return "other";
+}
+
+// normalizePlaygroundText_ は normalizeForPaper_ に吸収済み（重複定義防止）
+
 function safeText(s) {
   return String(s ?? "");
 }
@@ -137,15 +277,22 @@ function setPillActive(el, active) {
 }
 
 function buildMainSupportText(fields, summary) {
-  return (summary || "").trim();
+  // 帳票には “正規化した summary” を入れる
+  return normalizeForPaper_((summary || "").trim());
 }
 
 function buildRemarksText(fields) {
-  const memo = (fields?.memo || "").trim();
-  return memo ? `メモ: ${memo}` : "";
+  // 備考欄は使わない（空固定）
+  return "";
 }
 
 function renderPaperPreview() {
+  // ★ 管理者以外は帳票を出さない
+  if (!isAdmin) {
+    if ($printCard) $printCard.style.display = "none";
+    return;
+  }
+
   if (!selectedMove || !lastAI || !lastAI.fields || !lastAI.summary) {
     if ($printCard) $printCard.style.display = "none";
     return;
@@ -173,12 +320,35 @@ function renderPaperPreview() {
   if ($pDestination) $pDestination.textContent = dest || "";
 
   if ($pMainSupport) $pMainSupport.textContent = buildMainSupportText(f, s);
-  if ($pRemarks) $pRemarks.textContent = buildRemarksText(f);
+  // 備考欄は空固定（メモは入れない）
+  if ($pRemarks) $pRemarks.textContent = "";
 
-  setPillActive($pRouteWalk, false);
-  setPillActive($pRouteBus, false);
-  setPillActive($pRouteTrain, false);
-  setPillActive($pRouteOther, true);
+  // ▼ 経路判定に使う“材料”を集める
+  const routeSourceText = [
+    selectedMove?.route_note,
+    selectedMove?.note,
+    lastAI?.summary,
+    lastAI?.fields?.destination,
+    $answer?.value,
+  ]
+    .filter(Boolean)
+    .join(" / ");
+
+  const routeCat = detectRouteCategory_(routeSourceText);
+  setPillActive($pRouteWalk, routeCat === "walk");
+  setPillActive($pRouteBus, routeCat === "bus");
+  setPillActive($pRouteTrain, routeCat === "train");
+  setPillActive($pRouteOther, routeCat === "other");
+
+  // ▼ 遊具ワード → 文言統一
+  // memo も帳票用に正規化して差し戻し（保存する memo も揃えるならここで更新）
+  const mergedMemoSource = [lastAI?.fields?.memo, $memo?.value, selectedMove?.note]
+    .filter(Boolean)
+    .join(" / ");
+  const normalizedMemo = normalizeForPaper_(mergedMemoSource);
+  if (lastAI?.fields) lastAI.fields.memo = normalizedMemo;
+  // 備考欄は空固定
+  if ($pRemarks) $pRemarks.textContent = "";
 }
 
 function getStepIdSafe() {
@@ -289,6 +459,9 @@ function renderResultForHelpers(data) {
   const facts = buildFactsFromFields(fields);
   $resultFacts.innerHTML = facts.map((x) => `<li>${safeText(x)}</li>`).join("");
   $resultRaw.textContent = ""; // JSONは画面に出さない
+
+  // AI生成が成功したら保存ボタンを更新
+  refreshSaveUI();
 }
 
 function formatMoveLine(m) {
@@ -338,12 +511,16 @@ function renderMovesList(items) {
           from && to ? `${from}→${to}` : m.route_note || m.note || "";
         $answer.value = routeText.replace(/^→|→$/g, "");
       }
+
+      // 予定を選択したら、保存可否は「AI生成済みか」に依存するので更新
+      refreshSaveUI();
     });
 
     $movesList.appendChild(div);
   });
 
   if ($movesSelected) $movesSelected.textContent = "選択中の予定：なし";
+  refreshSaveUI();
 }
 
 async function logout() {
@@ -377,6 +554,17 @@ async function loadMyMoves(helperName = currentHelperName) {
   selectedMove = null;
   if ($movesSelected) $movesSelected.textContent = "選択中の予定：なし";
 
+  // DOMが無ければ処理を中断（id変更などの事故を検知）
+  if (!$movesList || !$movesResult || !$movesSelected) {
+    console.error("[moves] DOM missing", {
+      movesList: !!$movesList,
+      movesResult: !!$movesResult,
+      movesSelected: !!$movesSelected,
+    });
+    alert("画面の部品が見つからず一覧を表示できません（movesList 等）。index.html の id を確認してください。");
+    return;
+  }
+
   const profile = await loadMyHelperProfile();
   if (!profile || !profile.helper_name) {
     if ($movesResult)
@@ -387,16 +575,20 @@ async function loadMyMoves(helperName = currentHelperName) {
   const helperKey = profile.helper_name;
   const helperKeySafe = helperKey.replaceAll('"', '\\"');
 
-  const now = new Date();
-  const jst = new Date(now.getTime() + 9 * 60 * 60 * 1000);
-
-  const fromObj = new Date(jst);
-  fromObj.setDate(fromObj.getDate() - 7);
-  const fromJst = fromObj.toISOString().slice(0, 10);
-
-  const toObj = new Date(jst);
+  // 期間を広げて未記入の予定を拾う（過去30日〜未来14日）
+  const today = new Date();
+  const toISODate = (d) => {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return `${y}-${m}-${day}`;
+  };
+  const fromObj = new Date(today);
+  fromObj.setDate(fromObj.getDate() - 30);
+  const toObj = new Date(today);
   toObj.setDate(toObj.getDate() + 14);
-  const toJst = toObj.toISOString().slice(0, 10);
+  const fromJst = toISODate(fromObj);
+  const toJst = toISODate(toObj);
 
   const { data, error } = await supabase
     .from("v_schedule_tasks_move_unwritten")
@@ -410,7 +602,7 @@ async function loadMyMoves(helperName = currentHelperName) {
     )
     .order("task_date", { ascending: true })
     .order("start_time", { ascending: true })
-    .limit(50);
+    .limit(200);
 
   if (error) {
     if ($movesResult) $movesResult.textContent = error.message;
@@ -419,9 +611,19 @@ async function loadMyMoves(helperName = currentHelperName) {
 
   const items = data || [];
   movesCache = items;
-  const header = `取得${items.length}件 (helper=${helperKey}, date=${fromJst}〜${toJst})`;
+  const header = `未記入 ${items.length}件（${fromJst}〜${toJst} / ${helperKey}）`;
   if ($movesResult) $movesResult.textContent = header; // JSON出力はしない
   renderMovesList(items);
+
+  // デバッグ用ログ
+  console.log("[unwritten] fetched", {
+    count: items.length,
+    range: { fromJst, toJst },
+    helperKey,
+    first: items[0]
+      ? { id: items[0].id, task_date: items[0].task_date, client_name: items[0].client_name }
+      : null,
+  });
 }
 
 async function loadMyTasksNext7Days() {
@@ -524,6 +726,9 @@ async function checkSession() {
       return;
     }
 
+    // ★ 管理者判定 → UI切替
+    setAdminUI(!!profile.is_admin);
+
     const tasks = await afterLoginLoadTasks_();
     // ヘルパー向けに表示を簡潔化
     setStatus(
@@ -623,22 +828,67 @@ function buildCurrentTemplate() {
 }
 
 async function invokeEdgeFunction() {
+  // 二度押し防止
+  if (invokeInFlight || $invoke?.dataset.busy === "1") return;
+
+  const labelRunning = "実行中…（30秒でタイムアウトします）";
   try {
-    setFnResult("実行中…");
+    dbg("invokeEdgeFunction: start", null);
+    // 透明モーダルが上に残っているとクリック不能になるので保険
+    forceCloseConfirmModalIfAny();
+    setFnResult(labelRunning);
 
-    const stepId = ($stepId?.value || "").trim();
-    const answer = ($answer?.value || "").trim();
+    // 1) 予定選択が必須（task_id / selectedMove が無いと保存・帳票もできない）
+    // 変数名が環境で違う場合があるので、両方見る
+    const move =
+      (typeof selectedMove !== "undefined" && selectedMove) ||
+      (typeof selectedTask !== "undefined" && selectedTask) ||
+      null;
+    dbg("selected move", move);
+    if (!move || !move.id) {
+      setFnResult("先に「今日の移動予定」を選択してください。");
+      return;
+    }
 
-    if (!stepId) return setFnResult("stepId が空です");
-    if (!answer) return setFnResult("answer が空です");
+    // 2) 入力欄が取れているか（DOM参照が壊れてるとここで分かる）
+    dbg("dom refs", {
+      answerEl: !!$answer,
+      resultEl: !!$result,
+      stepIdEl: !!$stepId,
+    });
 
-    const body = {
-      stepId,
-      answer,
-      current: buildCurrentTemplate(),
-    };
+    // stepId は memo 固定で送る（Edge Function 側で memo 取り込み）
+    const stepId = "memo";
+    const memoInput = ($memo?.value || "").trim();
 
-    const res = await fetch(`${SUPABASE_URL}/functions/v1/parse-service-note-step`, {
+    // 行き先(answer)は「from→to」を最優先。無ければ route_note → note → 入力欄
+    const from = (move?.from_place || "").trim();
+    const to = (move?.to_place || "").trim();
+    const routeFromMove =
+      from && to ? `${from}→${to}` : String(move?.route_note || move?.note || "").trim();
+    const answer = routeFromMove || ($answer?.value || "").trim();
+
+    dbg("inputs", { stepId, answer, memoInput });
+
+    const current = { ...buildCurrentTemplate(), memo: memoInput };
+    // current.destination も「from→to」ベースで確実に入れる
+    current.destination = answer || current.destination || "";
+
+    const body = { stepId, answer, current };
+
+    // 二度押し防止開始
+    invokeInFlight = true;
+    setInvokeBusy(true);
+
+    dbg("request body", body);
+
+    // supabase.invoke ではなく fetch 直叩き（既に採用中の方針）
+    const url = `${SUPABASE_URL}/functions/v1/parse-service-note-step`;
+    // 30秒タイムアウト（iPhone/回線で固まる対策）
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 30000);
+
+    const res = await fetch(url, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -646,30 +896,65 @@ async function invokeEdgeFunction() {
         Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
       },
       body: JSON.stringify(body),
+      signal: controller.signal,
     });
-
+    clearTimeout(timer);
     const text = await res.text();
-
+    dbg("edge response", { status: res.status, text: text.slice(0, 300) });
     if (!res.ok) {
-      setFnResult(`HTTP ${res.status}\n${text}`);
+      setFnResult(`Edge Function エラー: HTTP ${res.status}\n${text}`);
       return;
     }
-
     const data = JSON.parse(text);
 
-    // 保存（後続の保存ボタンで使う）
+    // 3) 成功：summary/fields を確実に保持
     lastAI = { fields: data?.fields ?? null, summary: data?.summary ?? null };
+    dbg("lastAI set", lastAI);
 
-    // 画面表示
-    setFnResult(JSON.stringify(data, null, 2));
+    // 4) 画面に出すのは summary だけ（詳細JSONは折りたたみへ）
+    const summary = (data?.summary || "").toString();
+    if (!summary) {
+      setFnResult("AI下書きが生成されませんでした");
+      return;
+    }
+    setFnResult(summary);
+    setSummaryText(summary);
+
+    // AIが出たら保存できる状態に
+    refreshSaveUI();
+
+    // 5) 帳票プレビューがあるなら更新（存在しなければ何もしない）
+    if (typeof renderPaperPreview === "function") {
+      try {
+        renderPaperPreview(move, lastAI);
+        dbg("renderPaperPreview called", null);
+      } catch (e) {
+        dbg("renderPaperPreview error", String(e?.message || e));
+      }
+    }
   } catch (e) {
     console.error(e);
-    setFnResult(String(e?.message || e));
+    // AbortError を分かりやすく
+    const msg =
+      e?.name === "AbortError"
+        ? "AI生成がタイムアウトしました（30秒）。電波状況を確認してもう一度お試しください。"
+        : String(e?.message || e);
+    setFnResult(msg);
+  } finally {
+    // 二度押し防止解除（成功/失敗どちらでも戻す）
+    invokeInFlight = false;
+    setInvokeBusy(false);
+    refreshSaveUI();
   }
 }
 
 async function saveNote() {
   try {
+    // 二度押し防止（保存処理の多重起動を止める）
+    if (savingLock) return;
+    savingLock = true;
+    refreshSaveUI();
+
     const taskId = selectedMove?.id;
     if (!taskId) {
       setFnResult("予定を選択してください（上の移動予定カードをクリック）");
@@ -711,11 +996,11 @@ async function saveNote() {
       updated_at: new Date().toISOString(),
     };
 
-  const { data, error } = await supabase
-    .from("service_notes_move")
-    .upsert(payload, { onConflict: "task_id" })
-    .select("id, task_id")
-    .single();
+    const { data, error } = await supabase
+      .from("service_notes_move")
+      .upsert(payload, { onConflict: "task_id" })
+      .select("id, task_id")
+      .single();
 
     if (error) {
       setFnResult("保存エラー: " + error.message);
@@ -729,9 +1014,16 @@ async function saveNote() {
     if ($resultSummaryEdit) $resultSummaryEdit.value = "";
     await loadMyMoves().catch(console.error);
     if ($printCard) $printCard.style.display = "none";
+
+    // 保存したらAI/予定をクリア → 保存不可に戻す
+    lastAI = null;
+    refreshSaveUI();
   } catch (e) {
     console.error(e);
     setFnResult(String(e?.message || e));
+  } finally {
+    savingLock = false;
+    refreshSaveUI();
   }
 }
 
@@ -739,15 +1031,20 @@ function openConfirmModal() {
   if (!$confirmModal) return;
   $confirmModal.classList.add("is-open");
   $confirmModal.setAttribute("aria-hidden", "false");
+  $confirmModal.style.display = "flex";
 }
 
 function closeConfirmModal() {
   if (!$confirmModal) return;
   $confirmModal.classList.remove("is-open");
   $confirmModal.setAttribute("aria-hidden", "true");
+  $confirmModal.style.display = "none";
 }
 
 async function onClickSave() {
+  dbg("save click", { savingLock, canSave: canSaveNow(), selectedMoveId: selectedMove?.id });
+  // 二度押し防止（押せてしまう環境向けの保険）
+  if (savingLock) return;
   if (!selectedMove) {
     setFnResult("予定を選択してください（上の予定カードをクリック）");
     return;
@@ -761,14 +1058,13 @@ async function onClickSave() {
 
 async function onConfirmSave() {
   if (savingLock) return;
-  savingLock = true;
   try {
     if ($confirmOk) $confirmOk.disabled = true;
     if ($confirmCancel) $confirmCancel.disabled = true;
     await saveNote();
     closeConfirmModal();
   } finally {
-    savingLock = false;
+    refreshSaveUI();
     if ($confirmOk) $confirmOk.disabled = false;
     if ($confirmCancel) $confirmCancel.disabled = false;
   }
@@ -784,11 +1080,9 @@ document.addEventListener("keydown", (e) => {
   if (e.key === "Escape") closeConfirmModal();
 });
 
+// schedule_tasks は今回未使用のため無効化（$taskList 未定義で落ちる事故を防ぐ）
 async function loadTasksForMe(helperName) {
-  if (!$taskList) return;
-  setTaskListMessage("予定取得は一時停止中です（schedule_tasks は今回未使用）");
-  selectedTask = null;
-  renderSelectedTask();
+  return;
 }
 
 // ページ表示直後にハッシュログインを処理し、未処理なら通常チェック
@@ -813,4 +1107,6 @@ $confirmCancel?.addEventListener("click", () => closeConfirmModal());
 $confirmOk?.addEventListener("click", () => onConfirmSave().catch(console.error));
 $printBtn?.addEventListener("click", () => window.print());
 
+// 初期状態：保存は押せない
+refreshSaveUI();
 // 変更点: signInWithOtpのoptionsをemailRedirectToに修正／setSession引数をv2仕様（access_token, refresh_tokenのみ）に変更／ステータスに変更内容を表示／Edge Function の呼び出しに helper_key を追加

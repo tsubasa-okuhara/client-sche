@@ -16,6 +16,14 @@
         "headers": [{ "key": "Cache-Control", "value": "no-store" }]
       },
       {
+        "source": "/service-records-test/**",
+        "headers": [{ "key": "Cache-Control", "value": "no-store" }]
+      },
+      {
+        "source": "/helper-shift/**",
+        "headers": [{ "key": "Cache-Control", "value": "no-store" }]
+      },
+      {
         "source": "/**/*.js",
         "headers": [{ "key": "Cache-Control", "value": "no-cache" }]
       },
@@ -31,8 +39,24 @@
       },
       { "source": "/helpers/**", "destination": "/helpers/index.html" },
       {
+        "source": "/service-records-admin/**",
+        "destination": "/service-records-admin/index.html"
+      },
+      {
         "source": "/service-records/**",
         "destination": "/service-records/index.html"
+      },
+      {
+        "source": "/service-records-test/**",
+        "destination": "/service-records/index.html"
+      },
+      {
+        "source": "/service-records-test/**",
+        "destination": "/service-records-test/index.html"
+      },
+      {
+        "source": "/helper-shift/**",
+        "destination": "/helper-shift/index.html"
       },
       { "source": "/tamari/**", "destination": "/tamari/index.html" },
       { "source": "**", "destination": "/index.html" }

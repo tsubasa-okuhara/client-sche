@@ -179,12 +179,10 @@
           </div>
         </a>
 
-        <a class="cardLink" href="https://helper-shift-ts.web.app/">
+        <a class="cardLink" href="/helper-shift/">
           <div class="navCard">
             <div class="navTitle">✏️ 希望シフト記入</div>
-            <p class="navDesc">
-              希望シフトを Supabase へ送信。（別プロジェクト helper-shift-ts）
-            </p>
+            <p class="navDesc">希望シフトを Supabase へ送信。</p>
             <span class="cta">開く</span>
           </div>
         </a>
@@ -199,11 +197,23 @@
           </div>
         </a>
 
+        <!-- サービス記録（本番） -->
         <a class="cardLink" href="/service-records/">
           <div class="navCard">
             <div class="navTitle">📝 サービス記録</div>
             <p class="navDesc">
-              サービス提供の記録を確認。（仮リンク /service-records/）
+              サービス提供の記録を入力・確認。
+            </p>
+            <span class="cta">開く</span>
+          </div>
+        </a>
+
+        <!-- サービス記録（試験：管理者だけ表示） -->
+        <a class="cardLink" href="/service-records-test/" id="service-records-test-card" style="display:none;">
+          <div class="navCard">
+            <div class="navTitle">🧪 サービス記録（試験）</div>
+            <p class="navDesc">
+              管理者用の検証ページ。
             </p>
             <span class="cta">開く</span>
           </div>
@@ -211,4 +221,16 @@
       </div>
     </section>
   </body>
+  <script>
+    // 管理者だけ試験カードを表示
+    (function () {
+      const params = new URLSearchParams(location.search);
+      if (params.get("admin") === "1") {
+        localStorage.setItem("adminMode", "true");
+      }
+      const adminMode = localStorage.getItem("adminMode") === "true";
+      const el = document.getElementById("service-records-test-card");
+      if (el) el.style.display = adminMode ? "" : "none";
+    })();
+  </script>
 </html>

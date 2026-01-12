@@ -1,0 +1,734 @@
+:root {
+  --bg: #fbf7ff;
+  --card: #fff;
+  --text: #2b2b2b;
+  --muted: #6b6470;
+  --border: #e6ddee;
+  --shadow: 0 14px 36px rgba(40, 10, 70, 0.1);
+  --radius: 16px;
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Hiragino Sans",
+    "YuGothic", sans-serif;
+}
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  padding: 10px 12px;
+  background: rgba(255, 255, 255, 0.85);
+  border-bottom: 1px solid var(--border);
+  backdrop-filter: blur(8px);
+}
+.back {
+  text-decoration: none;
+  color: #2563eb;
+  font-weight: 700;
+}
+.titleBlock h1 {
+  margin: 0;
+  font-size: 18px;
+}
+.sub {
+  color: var(--muted);
+  font-size: 12px;
+}
+.actions {
+  margin-left: auto;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+button {
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  background: #fff;
+  border-radius: 10px;
+  padding: 8px 10px;
+  cursor: pointer;
+  font-weight: 700;
+}
+button.ghost {
+  background: #fff;
+}
+button.danger {
+  border-color: rgba(255, 0, 0, 0.25);
+}
+button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.wrap {
+  max-width: 980px;
+  margin: 14px auto;
+  padding: 0 12px 40px;
+}
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 14px;
+  margin-top: 12px;
+}
+.row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+input {
+  padding: 9px 10px;
+  border-radius: 10px;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  min-width: 220px;
+}
+.status {
+  white-space: pre-wrap;
+  margin: 10px 0 0;
+  font-size: 13px;
+  color: #333;
+}
+.hint {
+  margin: 6px 0 0;
+  color: var(--muted);
+  font-size: 12px;
+}
+.filters {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  margin-bottom: 10px;
+}
+.label {
+  font-weight: 800;
+  color: #333;
+}
+.clientGroup {
+  margin-top: 14px;
+  border-top: 2px solid rgba(0, 0, 0, 0.08);
+  padding-top: 12px;
+}
+.clientHeader {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
+.clientName {
+  font-size: 16px;
+  font-weight: 900;
+}
+.clientMeta {
+  color: var(--muted);
+  font-size: 12px;
+}
+.dayBlock {
+  margin-top: 10px;
+  padding: 10px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+  background: #fff7fb;
+}
+.dayTitle {
+  font-weight: 900;
+  margin-bottom: 6px;
+}
+.noteRow {
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  background: #fff;
+  border-radius: 12px;
+  padding: 10px;
+  margin: 8px 0;
+}
+.noteTop {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  font-weight: 800;
+}
+.noteSub {
+  margin-top: 4px;
+  color: #444;
+  font-size: 13px;
+  line-height: 1.45;
+}
+.badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  background: #fff;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+:root {
+  --paper-border: #a8a8a8;
+  --paper-label: #f4f1ed;
+  --paper-bg: #fff;
+  --paper-text: #111;
+}
+
+/* 画面上では小さめに表示、印刷時はA4に最適化 */
+.printArea {
+  margin-top: 16px;
+}
+.paper {
+  background: var(--paper-bg);
+  color: var(--paper-text);
+  border: 2px solid var(--paper-border);
+  border-radius: 18px;
+  padding: 18px 18px 14px;
+  margin: 14px 0;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.06);
+}
+.paper-title {
+  text-align: center;
+  font-weight: 800;
+  font-size: 28px;
+  letter-spacing: 0.06em;
+  margin: 8px 0 14px;
+}
+
+/* ★ 6列グリッド（見本帳票と同じ構造） */
+.paper-grid {
+  display: grid;
+  grid-template-columns: 160px 1fr 160px 1fr 160px 1fr;
+  border: 2px solid var(--paper-border);
+  border-radius: 14px;
+  overflow: hidden;
+}
+.paper-grid .cell {
+  border-right: 2px solid var(--paper-border);
+  border-bottom: 2px solid var(--paper-border);
+  padding: 12px 12px;
+  font-size: 18px;
+  line-height: 1.4;
+}
+.paper-grid .cell:nth-child(6n) {
+  border-right: none;
+}
+.paper-grid .cell.label {
+  background: var(--paper-label);
+  font-weight: 800;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.paper-grid .cell.value {
+  background: #fff;
+  font-weight: 700;
+}
+
+/* ===== paper grid column tuning =====
+   6列構成: [label][value][label][value][label][value]
+   赤枠(=label)を狭く、白枠(=value)を広くする
+*/
+:root {
+  --paper-label-w: 64px; /* ←赤枠をもっと狭くしたいなら 56px/48px */
+  --paper-value-w: 1fr; /* ←白枠は伸びる */
+}
+
+.paper-grid {
+  /* label/value のペア×3 */
+  grid-template-columns:
+    var(--paper-label-w) var(--paper-value-w)
+    var(--paper-label-w) var(--paper-value-w)
+    var(--paper-label-w) var(--paper-value-w) !important;
+}
+
+/* label は折り返さず、詰める */
+.paper-grid .cell.label {
+  white-space: nowrap;
+  word-break: keep-all;
+}
+
+/* value は折り返しOK（内容に応じて広がる） */
+.paper-grid .cell.value {
+  min-width: 0; /* grid内のはみ出し抑制 */
+}
+
+/* ===== paper typography fit (prevent overflow) ===== */
+.paper {
+  /* まず全体を少し小さく */
+  font-size: 12px;
+  line-height: 1.25;
+}
+
+/* grid内の文字は折り返しを許可 */
+.paper-grid .cell {
+  min-width: 0; /* grid内で潰せるように */
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  hyphens: auto;
+}
+
+/* 見出し(label)は「2行まで」許可して、はみ出し防止 */
+.paper-grid .cell.label {
+  white-space: normal;
+  line-height: 1.15;
+  font-size: 11px; /* 見出しだけ少し小さく */
+  display: -webkit-box;
+  -webkit-line-clamp: 2; /* 2行まで */
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* 値(value)側は小さめ + 行間を詰める */
+.paper-grid .cell.value {
+  font-size: 12px;
+  line-height: 1.25;
+}
+
+/* 大きい本文セルはさらに小さくして収める（主な援助内容など） */
+.paper-grid .cell.value.big {
+  font-size: 11px;
+  line-height: 1.2;
+}
+
+/* 備考も同様に */
+.paper-grid .cell.value.remarks {
+  font-size: 11px;
+  line-height: 1.2;
+}
+
+/* 余白を少し詰める（セルのpadding定義がある場合は上書き） */
+.paper-grid .cell {
+  padding: 6px 8px !important;
+}
+
+/* ===== shrink the big empty band (red area) ===== */
+/* .paper-grid が grid を使っている前提。行が固定されている場合に上書きする。 */
+.paper-grid {
+  /* 既存が 3行固定などなら、auto ベースに置き換えて余白行を作らない */
+  grid-auto-rows: auto;
+}
+
+/* もし grid-template-rows を固定pxで定義しているなら、それを上書き */
+@supports (grid-template-rows: auto) {
+  .paper-grid {
+    /* 上から: ヘッダ行 / 2行目 / 3行目(行先+本文+備考) / 経路行 */
+    /* “本文の行”は minmax で必要最小に */
+    grid-template-rows:
+      auto
+      auto
+      minmax(90px, auto)
+      auto !important;
+  }
+}
+
+/* 本文セルにだけ最低限の高さを付与（赤枠の“空行”を作らない） */
+.paper-grid .cell.value.big {
+  min-height: 90px; /* ここを小さくすると赤枠が縮む。例: 90〜120pxで調整 */
+}
+.paper-grid .cell.value.remarks {
+  min-height: 90px;
+}
+
+/* もし「空白行」用のセル/行が HTML にある場合の保険
+   （例: class="spacerRow" を付けているなら印刷時に消す）
+*/
+@media print {
+  .paper-grid .spacerRow {
+    display: none !important;
+  }
+}
+
+/* ===== print: さらに詰めて必ず1枚に収める ===== */
+@media print {
+  .paper {
+    font-size: 11px;
+    line-height: 1.2;
+  }
+  .paper-grid .cell.label {
+    font-size: 10px;
+  }
+  .paper-grid .cell.label[class*="label-"] {
+    font-size: 9px;
+    line-height: 1.1;
+  }
+  .paper-grid .cell.value {
+    font-size: 11px;
+  }
+  .paper-grid .cell.value.big,
+  .paper-grid .cell.value.remarks {
+    font-size: 10px;
+    line-height: 1.15;
+  }
+}
+
+/* ===== last resort: 端末が狭い時だけ縮小（プレビュー崩れの保険） ===== */
+@media screen and (max-width: 420px) {
+  .paper {
+    transform: scale(0.92);
+    transform-origin: top left;
+  }
+}
+/* 大きい記入欄（主な援助内容 / 備考） */
+.paper-grid .cell.value.big {
+  min-height: 320px;
+  font-weight: 600;
+  white-space: pre-wrap;
+}
+.paper-grid .cell.value.remarks {
+  min-height: 320px;
+  white-space: pre-wrap;
+}
+
+/* 経路ピル */
+.route-box {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 6px 0;
+}
+.pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 16px;
+  border-radius: 999px;
+  border: 2px solid rgba(0, 0, 0, 0.25);
+  background: #fff;
+  font-weight: 800;
+}
+.pill.is-active {
+  background: #fff3e8;
+  border-color: rgba(0, 0, 0, 0.5);
+}
+
+.page-break {
+  break-after: page;
+  page-break-after: always;
+}
+
+/* =========================
+   印刷: A4 に 2件/ページ（上下）
+   ========================= */
+@page {
+  size: A4;
+  margin: 6mm;
+}
+
+@media print {
+  :root {
+    --paper-label-w: 58px; /* 印刷時はさらに細く */
+  }
+  /* 画面UIは印刷しない */
+  .no-print,
+  header,
+  .topbar,
+  #panel .card,
+  #groups,
+  #meta,
+  .controls {
+    display: none !important;
+  }
+
+  /* 印刷対象だけ表示 */
+  #printArea {
+    display: block !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  /* 1ページに2つ縦並び（A4高さ297mm → margin合計12mm → 有効約285mm → 半分142.5mm） */
+  #printArea .paper,
+  #printArea .paper.paper--half {
+    height: 142.5mm;
+    width: 100%;
+    box-sizing: border-box;
+    overflow: hidden; /* 下切れ防止のため、はみ出しは抑制 */
+    page-break-inside: avoid;
+    break-inside: avoid;
+    margin: 0 0 4mm 0 !important;
+    padding: 0 !important;
+    transform-origin: top left;
+
+    /* 印刷で色が薄くなる対策（必要なら） */
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* 2件ごとに改ページ（JS から class 付与する場合はこちらを利用） */
+  .page-break-after {
+    page-break-after: always;
+    break-after: page;
+  }
+  /* nth-child でも2件ごと改ページ */
+  #printArea .paper:nth-child(2n) {
+    break-after: page;
+    page-break-after: always;
+  }
+  /* 最後は改ページしない */
+  #printArea .paper:last-child {
+    break-after: auto;
+    page-break-after: auto;
+  }
+
+  /* 帳票内の文字が溢れる対策（小さくして収める） */
+  .paper .paper-grid,
+  .paper .cell {
+    font-size: 10.5pt !important;
+    line-height: 1.25 !important;
+  }
+  .paper .cell.value.big {
+    font-size: 10pt !important;
+    line-height: 1.22 !important;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+  }
+  .paper .cell.value.remarks {
+    font-size: 10pt !important;
+    line-height: 1.22 !important;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+  }
+  .paper .paper-title {
+    font-size: 16pt !important;
+    margin: 0 0 4mm 0 !important;
+  }
+  .paper .pill {
+    font-size: 10pt !important;
+    padding: 2mm 6mm !important;
+  }
+}
+/* ===== paper: shrink main block height to "content-fit" ===== */
+@media print {
+  /* 1) 本文ブロック行を「必要最小 + 伸びる」にする */
+  .paper-grid {
+    /* 既存が固定pxなら上書き */
+    grid-template-rows:
+      auto /* 1行目: 事業所名/確認欄/ヘルパー */
+      auto /* 2行目: 利用者/日付/時間 */
+      minmax(90px, auto) /* 3行目: 行先 + 主な援助内容 + 備考 ← ここを短く */
+      auto !important; /* 4行目: 経路 */
+  }
+
+  /* 2) セル側の最低高さも短く（内容が少なければ縮む） */
+  .paper-grid .cell.value.big,
+  .paper-grid .cell.value.remarks {
+    min-height: 90px; /* ここを 90〜140px で調整 */
+  }
+
+  /* 3) 文字が多いときに溢れないように（縮める方向に寄せる） */
+  .paper-grid .cell.value.big,
+  .paper-grid .cell.value.remarks {
+    font-size: 10px; /* はみ出すなら 10px に */
+    line-height: 1.25;
+    overflow: hidden; /* “ページ跨ぎ”で切れるよりは、まず溢れ防止 */
+    word-break: break-word;
+  }
+}
+
+/* ===== print: 2枚/ページ用のラッパー運用 ===== */
+@media print {
+  /* A4 / 2枚を1ページに収める */
+  @page {
+    size: A4 portrait;
+    margin: 8mm;
+  }
+
+  /* 画面用UIは印刷しない */
+  .no-print {
+    display: none !important;
+  }
+
+  /* 印刷エリアを「縦に2段」レイアウトにする */
+  #printArea {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 0 !important;
+  }
+
+  /*
+    重要:
+    transform: scale() は「見た目だけ縮む」ので、レイアウト崩れを防ぐために
+    “枠(高さを確保する) + 中身(縮小表示)” の2段構造にする。
+  */
+  .paperWrap {
+    height: 140mm; /* 8mmマージン想定で「2枚/ページ」に収める高さ */
+    overflow: hidden;
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  .paperWrap + .paperWrap {
+    margin-top: 0;
+  }
+
+  .paperWrap .paper {
+    /* 画面の“元の大きさ”を基準に、印刷時だけ縮小 */
+    transform: scale(0.55);
+    transform-origin: top left;
+    width: 210mm; /* 元サイズ基準（A4幅） */
+  }
+
+  /* 3枚目からは次ページへ（2枚単位で改ページ） */
+  .paperWrap:nth-child(2n) {
+    page-break-after: always;
+    break-after: page;
+  }
+
+  /* 最後は強制改ページしない */
+  .paperWrap:last-child {
+    page-break-after: auto;
+    break-after: auto;
+  }
+}
+
+/* ===== build marker (反映確認用) ===== */
+:root {
+  --build-id: "admin-css-20260109-0220";
+}
+
+/* 画面でも「印刷用レイアウト」を疑似表示したい時のトグル */
+body.is-print-preview #printArea {
+  /* 2枚/1ページの見え方を画面でも確認できる */
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8mm;
+}
+body.is-print-preview .paper {
+  transform: scale(0.48);
+  transform-origin: top left;
+  margin: 0;
+}
+
+/* build-id を画面に出す（邪魔なら後で消す） */
+#buildMarker {
+  position: fixed;
+  right: 10px;
+  bottom: 10px;
+  z-index: 9999;
+  font-size: 12px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.72);
+  color: #fff;
+}
+/* =========================
+ * 印刷時：A4いっぱいに拡張（上寄せ・余白ほぼゼロ）
+ * 目的：プレビューで小さく見えても、印刷/PDFではA4全面に近づける
+ * ========================= */
+@page {
+  size: A4;
+  margin: 6mm; /* ここを 0mm にすると“ほぼ全面”になります（プリンタによっては不可） */
+}
+
+@media print {
+  html,
+  body {
+    width: 210mm;
+    height: 297mm;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #fff !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* 画面用UIは非表示（必要なら既存 no-print を利用） */
+  .no-print {
+    display: none !important;
+  }
+
+  /* 印刷エリアは上寄せで詰める */
+  #printArea {
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  /* 1枚のA4に対して “枠（paper）” を最大化する */
+  .paper {
+    /* 既存の影などをOFF */
+    box-shadow: none !important;
+    background: #fff !important;
+
+    /* A4の印刷可能領域に合わせる（@page margin 分を引く） */
+    width: calc(210mm - 12mm) !important; /* 210mm - (6mm*2) */
+    height: calc(297mm - 12mm) !important; /* 297mm - (6mm*2) */
+    margin: 0 !important;
+    padding: 0 !important;
+
+    /* 上寄せ */
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  /* もし“縮小表示”用に transform: scale(...) を当てている場合は印刷時に解除 */
+  .paper,
+  .paperWrap,
+  #paper,
+  #paper * {
+    transform: none !important;
+  }
+}
+
+@media print {
+  .paper {
+    width: 210mm !important;
+    height: 297mm !important;
+    border-radius: 0 !important;
+  }
+
+  /* 影/余白を完全排除して上寄せ */
+  #printArea {
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+  body {
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  /* もし「中央寄せ + 余白」を作っているラッパーがあれば殺す */
+  .wrap,
+  .container,
+  .panel,
+  .card {
+    margin: 0 !important;
+    padding: 0 !important;
+    max-width: none !important;
+  }
+}
+/* ===== 印刷時：上段ラベル（事業所名/利用者確認欄/ヘルパー名）を縮小して見切れ防止 ===== */
+@media print {
+  /* ラベル共通：少し小さく + 余白を詰める */
+  .paper-grid .cell.label {
+    font-size: 9.5pt !important;
+    line-height: 1.1 !important;
+    padding: 2.2mm 2.4mm !important;
+    letter-spacing: 0 !important;
+    white-space: normal !important;
+    word-break: keep-all !important;
+    overflow: hidden !important;
+  }
+
+  /* 特に長い「利用者確認欄」はもう一段小さく */
+  .paper-grid .cell.label.label-confirm {
+    font-size: 8.5pt !important;
+  }
+
+  /* 値側も少し詰める（上段がまだ詰まる場合の保険） */
+  .paper-grid .cell.value {
+    font-size: 10.5pt !important;
+    line-height: 1.2 !important;
+    padding: 2.4mm 2.8mm !important;
+    overflow: hidden !important;
+  }
+}

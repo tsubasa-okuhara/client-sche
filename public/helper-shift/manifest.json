@@ -1,0 +1,13 @@
+{
+  "name": "ヘルパー希望シフト",
+  "short_name": "希望シフト",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f7f3ef",
+  "theme_color": "#ff8a65",
+  "icons": [
+    { "src": "/favicon-32.png", "sizes": "32x32", "type": "image/png" },
+    { "src": "/favicon-16.png", "sizes": "16x16", "type": "image/png" }
+  ]
+}
+
