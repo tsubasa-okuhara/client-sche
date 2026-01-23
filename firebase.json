@@ -1,4 +1,7 @@
 {
+  "functions": {
+    "source": "functions"
+  },
   "hosting": {
     "public": "public",
     "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
@@ -33,6 +36,7 @@
       }
     ],
     "rewrites": [
+      { "source": "/api/training", "function": "trainingProxy" },
       {
         "source": "/takizawa_schedule/**",
         "destination": "/takizawa_schedule/index.html"
