@@ -9,3 +9,4 @@ helpers-ts/dist/
 **/.env.local
 **/node_modules/
 .DS_Store
+functions/.env
