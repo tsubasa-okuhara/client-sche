@@ -130,7 +130,7 @@ exports.trainingProxy = onRequest(
         message: err?.message || "Proxy request failed.",
       });
     }
-  }
+  },
 );
 
 function parseJsonBody(body) {

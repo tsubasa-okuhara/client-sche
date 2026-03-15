@@ -1,6 +1,7 @@
 // ===== Supabase =====
 const API_URL = "https://xwnbdlcukycihgfrfcox.supabase.co/rest/v1/schedule";
-const API_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh3bmJkbGN1a3ljaWhnZnJmY294Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDczMzU1ODIsImV4cCI6MjA2MjkxMTU4Mn0.WxvvQsY0Efildt9YC55eU0Nus_8E6nufB-_oZ9yMXbI";
+const API_KEY =
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh3bmJkbGN1a3ljaWhnZnJmY294Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDczMzU1ODIsImV4cCI6MjA2MjkxMTU4Mn0.WxvvQsY0Efildt9YC55eU0Nus_8E6nufB-_oZ9yMXbI";
 
 // ===== 固定：滝澤さん専用 =====
 const HELPER_NAME = "滝澤";
@@ -12,8 +13,8 @@ let currentMonth = new Date().getMonth() + 1;
 // 月初/翌月初（※絞り込み用）
 function monthRangeISO(year, month) {
   const start = new Date(year, month - 1, 1);
-  const end   = new Date(year, month, 1); // 翌月1日（lt 用）
-  const toISO = d =>
+  const end = new Date(year, month, 1); // 翌月1日（lt 用）
+  const toISO = (d) =>
     new Date(d.getTime() - d.getTimezoneOffset() * 60000)
       .toISOString()
       .split("T")[0];
@@ -26,24 +27,25 @@ function monthRangeISO(year, month) {
 async function fetchSchedulesForMonth() {
   const { start, end } = monthRangeISO(currentYear, currentMonth);
 
-  const url = `${API_URL}?select=*`
-            + `&name=eq.${encodeURIComponent(HELPER_NAME)}`
-            + `&date=gte.${start}&date=lt.${end}`
-            + `&order=date.asc,start_time.asc`;
+  const url =
+    `${API_URL}?select=*` +
+    `&name=eq.${encodeURIComponent(HELPER_NAME)}` +
+    `&date=gte.${start}&date=lt.${end}` +
+    `&order=date.asc,start_time.asc`;
 
   const res = await fetch(url, {
-    method: 'GET',
+    method: "GET",
     headers: {
       apikey: API_KEY,
       Authorization: `Bearer ${API_KEY}`,
-      'Cache-Control': 'no-cache',
-      Pragma: 'no-cache'
+      "Cache-Control": "no-cache",
+      Pragma: "no-cache",
     },
-    cache: 'no-store'
+    cache: "no-store",
   });
 
   if (!res.ok) {
-    console.error('Supabase fetch failed:', res.status, await res.text());
+    console.error("Supabase fetch failed:", res.status, await res.text());
     return [];
   }
   return res.json();
@@ -63,12 +65,12 @@ function formatTime(t) {
   if (typeof t === "string" && /^\d{1,2}:\d{2}$/.test(t)) return t;
   const d = new Date(t);
   if (isNaN(d.getTime())) return t;
-  return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+  return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
 }
 
 function groupByDate(data) {
   const map = {};
-  data.forEach(item => {
+  data.forEach((item) => {
     (map[item.date] ||= []).push(item);
   });
   return map;
@@ -77,7 +79,7 @@ function groupByDate(data) {
 // 同時刻・同内容を1カードに集約
 function groupByClientTimeTask(data) {
   const map = {};
-  data.forEach(item => {
+  data.forEach((item) => {
     const key = `${item.client}_${item.start_time}_${item.task || ""}`;
     if (!map[key]) {
       map[key] = {
@@ -85,7 +87,7 @@ function groupByClientTimeTask(data) {
         start: item.start_time,
         end: item.end_time || "",
         task: item.task || "",
-        names: []
+        names: [],
       };
     }
     map[key].names.push(item.name);
@@ -97,27 +99,40 @@ async function renderCalendar() {
   const container = document.getElementById("calendar-body");
   container.innerHTML = "";
 
-  const schedules = await fetchSchedulesForMonth();        // ← すでに name=滝澤 で取得
+  const schedules = await fetchSchedulesForMonth(); // ← すでに name=滝澤 で取得
   const byDate = groupByDate(schedules);
 
-  document.getElementById("month-label").textContent = `${currentYear}年${currentMonth}月`;
+  document.getElementById("month-label").textContent =
+    `${currentYear}年${currentMonth}月`;
 
   const firstDay = new Date(currentYear, currentMonth - 1, 1);
   const startDow = firstDay.getDay();
   const daysInMonth = new Date(currentYear, currentMonth, 0).getDate();
 
   let row = document.createElement("tr");
-  for (let i = 0; i < startDow; i++) row.appendChild(document.createElement("td"));
+  for (let i = 0; i < startDow; i++)
+    row.appendChild(document.createElement("td"));
 
   for (let day = 1; day <= daysInMonth; day++) {
     const dateObj = new Date(currentYear, currentMonth - 1, day);
-    const dateStr = new Date(dateObj.getTime() - dateObj.getTimezoneOffset() * 60000)
-      .toISOString().split("T")[0];
+    const dateStr = new Date(
+      dateObj.getTime() - dateObj.getTimezoneOffset() * 60000,
+    )
+      .toISOString()
+      .split("T")[0];
     const { label, color } = getDateLabel(dateObj);
     const wday = dateObj.getDay();
 
     const cell = document.createElement("td");
-    cell.className = ["sunday","monday","tuesday","wednesday","thursday","friday","saturday"][wday];
+    cell.className = [
+      "sunday",
+      "monday",
+      "tuesday",
+      "wednesday",
+      "thursday",
+      "friday",
+      "saturday",
+    ][wday];
 
     const dayBox = document.createElement("div");
     dayBox.className = "day-box";
@@ -138,7 +153,7 @@ async function renderCalendar() {
 
     // 予定の描画
     if (hasItems) {
-      dayItems.forEach(group => {
+      dayItems.forEach((group) => {
         const entry = document.createElement("div");
         entry.className = "schedule-entry";
         entry.innerHTML = `
@@ -164,7 +179,12 @@ document.addEventListener("DOMContentLoaded", renderCalendar);
 
 function changeMonth(delta) {
   currentMonth += delta;
-  if (currentMonth > 12) { currentMonth = 1; currentYear++; }
-  else if (currentMonth < 1) { currentMonth = 12; currentYear--; }
+  if (currentMonth > 12) {
+    currentMonth = 1;
+    currentYear++;
+  } else if (currentMonth < 1) {
+    currentMonth = 12;
+    currentYear--;
+  }
   renderCalendar();
 }

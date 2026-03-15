@@ -1,495 +1,332 @@
-body {
-  font-family: system-ui, -apple-system, "Hiragino Sans", "YuGothic", sans-serif;
-  margin: 0;
-  background: #faf7f2;
+/* 変数: やわらかいピンク系アクセント */
+:root {
+  --bg-page: #ffffff;
+  --bg-card: #ffffff;
+  --accent: #e8b4bc;
+  --accent-strong: #d4929e;
+  --accent-soft: #fdf2f4;
+  --text: #333333;
+  --text-muted: #4b5563;
+  --border: rgba(0, 0, 0, 0.08);
+  --border-strong: rgba(0, 0, 0, 0.15);
 }
+
+body {
+  font-family:
+    system-ui,
+    -apple-system,
+    "Hiragino Sans",
+    "YuGothic",
+    sans-serif;
+  margin: 0;
+  background: var(--bg-page);
+  color: var(--text);
+}
+
 .topbar {
   display: flex;
   align-items: center;
   gap: 12px;
   padding: 14px 16px;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
-  background: #fff;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-card);
 }
+
 .topbar h1 {
   font-size: 18px;
   margin: 0;
+  font-weight: 700;
 }
+
 .back {
   text-decoration: none;
-  color: #2563eb;
+  color: var(--accent-strong);
   font-weight: 600;
 }
+
+.back:hover {
+  text-decoration: underline;
+}
+
 .wrap {
   max-width: 900px;
   margin: 16px auto;
   padding: 0 16px;
+  padding-bottom: 32px;
 }
+
 .card {
-  background: #fff;
-  border: 1px solid rgba(0, 0, 0, 0.08);
+  background: var(--bg-card);
+  border: 1px solid var(--border);
   border-radius: 12px;
-  padding: 14px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
+  padding: 16px;
+  margin-bottom: 16px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
 }
-.row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  align-items: center;
-}
-input {
-  flex: 1 1 260px;
-  padding: 10px 12px;
-  border-radius: 10px;
-  border: 1px solid rgba(0, 0, 0, 0.15);
-}
-button {
-  padding: 10px 12px;
-  border-radius: 10px;
-  border: 0;
-  background: #111827;
-  color: #fff;
-  cursor: pointer;
-}
-button.ghost {
-  background: #fff;
-  color: #111827;
-  border: 1px solid rgba(0, 0, 0, 0.15);
-}
-.status {
-  margin: 10px 0 0;
-  color: #333;
+
+.card h2 {
+  margin: 0 0 8px;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text);
 }
 
 .hint {
-  margin: 4px 0 8px;
+  margin: 4px 0 12px;
   font-size: 13px;
-  color: #4b5563;
+  color: var(--text-muted);
 }
 
-.steps {
-  margin: 0 0 10px 18px;
-  padding: 0;
-  line-height: 1.4;
-  font-size: 13px;
-  color: #374151;
+.status,
+.movesMessage {
+  margin: 8px 0;
+  font-size: 14px;
+  color: var(--text-muted);
 }
 
-.note {
-  margin: 0 0 12px;
-  padding: 8px 10px;
-  background: #f8fafc;
-  border: 1px solid rgba(0, 0, 0, 0.08);
-  border-radius: 10px;
-  font-size: 12px;
-  color: #475569;
-}
-
-.moveList,
+/* ===== 一覧エリア ===== */
 .movesList {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  margin-top: 10px;
+  gap: 12px;
+  margin-top: 12px;
 }
-.moveItem {
-  padding: 12px 14px;
-  border: 1px solid rgba(0, 0, 0, 0.12);
+
+.movesEmpty {
+  padding: 24px 16px;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 15px;
+}
+
+.movesEmpty.movesError {
+  color: #b91c1c;
+}
+
+.moveCard {
+  border: 1px solid var(--border-strong);
   border-radius: 12px;
-  background: #fff;
+  padding: 14px 16px;
+  background: var(--bg-card);
   cursor: pointer;
-}
-.moveItem:hover {
-  border-color: rgba(0, 0, 0, 0.25);
-}
-.moveItem.selected {
-  border-color: #111827;
-  box-shadow: 0 0 0 2px rgba(17, 24, 39, 0.15) inset;
+  transition: border-color 0.15s, box-shadow 0.15s;
 }
 
-/* ===== modal ===== */
-.modal-backdrop {
-  position: fixed;
-  inset: 0;
-  display: none;
-  pointer-events: none;
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
-  background: rgba(0, 0, 0, 0.35);
-  z-index: 9999;
+.moveCard:hover {
+  border-color: var(--accent);
+  box-shadow: 0 2px 8px rgba(232, 180, 188, 0.2);
 }
 
-.modal-backdrop.is-open {
-  display: flex;
-  pointer-events: auto;
+.moveCard.isSelected {
+  border-color: var(--accent-strong);
+  box-shadow: 0 0 0 2px var(--accent-soft);
 }
 
-.modal {
-  width: min(560px, 100%);
-  background: #fff;
-  border-radius: 16px;
-  padding: 16px 16px 14px;
-  border: 1px solid #e5e7eb;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18);
-}
-
-.modal h3 {
-  margin: 0 0 8px;
-  font-size: 18px;
-}
-
-.modal-text {
-  margin: 0 0 14px;
-  color: #374151;
-  line-height: 1.6;
-}
-
-.modal-actions {
-  display: flex;
-  gap: 10px;
-  justify-content: flex-end;
-}
-
-.danger {
-  background: #b91c1c;
-  color: #fff;
-  border: none;
-}
-
-.danger:hover {
-  filter: brightness(0.95);
-}
-.resultCard{
-  border: 1px solid #e6e6e6;
-  border-radius: 14px;
-  padding: 14px;
-  background: #fff;
-}
-.resultTitle{
-  font-weight: 700;
-  font-size: 14px;
-  margin-bottom: 6px;
-}
-.resultSummary{
-  font-size: 16px;
-  font-weight: 700;
-  line-height: 1.6;
-  padding: 10px 12px;
-  border: 1px solid #eee;
-  border-radius: 12px;
-  background: #fafafa;
-  white-space: pre-wrap;
-}
-.resultFacts{
-  margin: 8px 0 0;
-  padding-left: 18px;
-  line-height: 1.7;
-}
-.resultFacts li{
-  margin: 2px 0;
-}
-.resultDebug{
-  margin-top: 10px;
-}
-
-/* note form layout */
-.noteForm {
+.moveCardMain {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 6px;
 }
-.noteSection {
-  border: 1px solid rgba(0, 0, 0, 0.08);
-  border-radius: 12px;
-  padding: 12px;
-  background: #fff;
+
+.moveCardRow {
+  font-size: 14px;
+  line-height: 1.45;
 }
-.noteSection .label {
-  margin-bottom: 6px;
-  display: block;
+
+.moveCardClient {
+  font-weight: 700;
+  font-size: 16px;
+  color: var(--text);
 }
-.chipRow {
+
+.moveCardTime {
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.moveCardLabel {
+  color: var(--text-muted);
+  margin-right: 4px;
+}
+
+.moveCardRoute,
+.moveCardNote,
+.moveCardBeneficiary {
+  font-size: 13px;
+  color: var(--text);
+}
+
+.btnRecord {
+  margin-top: 12px;
+  width: 100%;
+  max-width: 280px;
+  padding: 14px 20px;
+  font-size: 16px;
+  font-weight: 600;
+  border: none;
+  border-radius: 10px;
+  background: var(--accent-strong);
+  color: #fff;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.btnRecord:hover {
+  background: var(--accent);
+  color: #fff;
+}
+
+.btnRecord:active {
+  transform: scale(0.98);
+}
+
+/* ===== 記録フォームカード ===== */
+.formCard {
+  border-left: 4px solid var(--accent);
+}
+
+.formFixed {
+  background: var(--accent-soft);
+  border-radius: 10px;
+  padding: 12px 14px;
+  margin-bottom: 16px;
+}
+
+.formFixedRow {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: 8px;
+  padding: 6px 0;
+  font-size: 14px;
+  line-height: 1.5;
 }
-.chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 10px;
-  border: 1px solid rgba(0, 0, 0, 0.12);
-  border-radius: 999px;
-  background: #fff;
-  cursor: pointer;
-  transition: all 0.15s ease;
+
+.formFixedRow .formLabel {
+  flex: 0 0 100px;
+  font-weight: 600;
+  color: var(--text-muted);
 }
-.chip input {
-  margin: 0;
+
+.formFixedRow .formValue {
+  flex: 1 1 200px;
+  word-break: break-word;
 }
-.chip:hover {
-  border-color: rgba(0, 0, 0, 0.25);
+
+.formInputs {
+  margin-top: 8px;
 }
-.chip.isChecked {
-  background: #111827;
-  color: #fff;
-  border-color: #111827;
+
+.formRow {
+  margin: 12px 0;
 }
-.detailGrid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
-}
-@media (max-width: 640px) {
-  .detailGrid {
-    grid-template-columns: 1fr;
-  }
-}
-.detailCard {
-  border: 1px solid rgba(0, 0, 0, 0.08);
-  border-radius: 12px;
-  padding: 12px;
-  background: #fff;
-}
-.detailCard h4 {
-  margin: 0 0 8px;
+
+.formRow .formLabel {
+  display: block;
+  margin-bottom: 6px;
+  font-weight: 600;
   font-size: 14px;
 }
-.detailCard .checkGrid,
-.detailCard .chipRow {
-  margin-top: 6px;
+
+.formMemo {
+  width: 100%;
+  min-height: 100px;
+  padding: 12px 14px;
+  font-size: 16px;
+  line-height: 1.6;
+  border: 1px solid var(--border-strong);
+  border-radius: 10px;
+  box-sizing: border-box;
 }
+
+.formMemo:focus {
+  outline: none;
+  border-color: var(--accent-strong);
+  background: var(--accent-soft);
+}
+
+/* ===== チェックカード（状態・トイレなど） ===== */
 .checkCard {
-  border: 1px solid #333;
+  border: 1px solid var(--border-strong);
   border-radius: 12px;
-  padding: 12px;
-  margin: 10px 0;
-  background: #fff;
+  padding: 12px 14px;
+  margin: 12px 0;
+  background: var(--bg-card);
 }
+
 .checkTitle {
   font-weight: 700;
-  margin-bottom: 8px;
+  font-size: 14px;
+  margin-bottom: 10px;
+  color: var(--text);
 }
+
 .checkGrid {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: 10px 16px;
 }
-.movesList{
-  display:flex;
-  flex-direction:column;
-  gap:10px;
-  margin-top:10px;
-}
-.moveCard{
-  border:1px solid rgba(0,0,0,.12);
-  border-radius:12px;
-  padding:10px 12px;
-  background:#fff;
-  cursor:pointer;
-}
-.moveCard:hover{
-  border-color: rgba(0,0,0,.25);
-}
-.moveCard.isSelected{
-  border-color:#111827;
-  box-shadow:0 0 0 2px rgba(17,24,39,.12) inset;
-}
-.moveTitle{
-  font-weight:700;
-}
-.moveSub{
-  color:#666;
-  font-size:13px;
-  margin-top:4px;
-}
-.aiCard {
-  border: 1px solid rgba(0, 0, 0, 0.08);
-  border-radius: 12px;
-  padding: 12px;
-  background: #fff;
-  line-height: 1.5;
-}
-.aiCard .summary {
-  font-weight: 700;
-  margin-bottom: 6px;
-}
-.aiCard .destination {
-  color: #4b5563;
-  font-size: 13px;
-  margin-bottom: 4px;
-}
-.moveItem {
-  padding: 12px 14px;
-  border: 1px solid rgba(0, 0, 0, 0.12);
-  border-radius: 12px;
-  background: #fff;
+
+.checkGrid label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
   cursor: pointer;
-}
-.moveItem:hover {
-  border-color: rgba(0, 0, 0, 0.25);
-}
-.moveItem.selected {
-  border-color: #111827;
-  box-shadow: 0 0 0 2px rgba(17, 24, 39, 0.15) inset;
+  padding: 4px 0;
 }
 
-/* ===== メモ入力（スマホ最適化） ===== */
-textarea.memo,
-textarea[name="memo"] {
-  font-size: 16px; /* iOSでズームされない最小サイズ */
-  line-height: 1.6;
-  min-height: 120px;
-  padding: 12px;
+.checkGrid input[type="radio"] {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  accent-color: var(--accent-strong);
 }
 
-/* スマホ時はさらに大きく */
-@media (max-width: 768px) {
-  textarea.memo,
-  textarea[name="memo"] {
-    min-height: 180px;
+/* ===== スマホで読みやすく ===== */
+@media (max-width: 640px) {
+  .wrap {
+    padding: 0 12px 24px;
+  }
+
+  .card {
+    padding: 14px;
+  }
+
+  .moveCard {
+    padding: 12px 14px;
+  }
+
+  .moveCardClient {
     font-size: 17px;
+  }
+
+  .btnRecord {
+    max-width: none;
+    padding: 16px;
+    font-size: 17px;
+  }
+
+  .formFixedRow .formLabel {
+    flex: 0 0 90px;
+  }
+
+  .checkGrid label {
+    font-size: 15px;
+  }
+
+  .formMemo {
+    min-height: 120px;
+    font-size: 16px;
   }
 }
 
-/* 入力中はさらに広げる（書きやすいモード） */
-textarea.memo:focus,
-textarea[name="memo"]:focus {
-  min-height: 240px;
-  background: #fffdf6;
-  border-color: #f2c94c;
-}
-.resultBox{
-  border:1px solid #e5e5e5;
-  border-radius:12px;
-  padding:14px 16px;
-  background:#fff;
-  line-height:1.6;
-  white-space:pre-wrap;
-}
-.resultDetails{
-  margin-top:10px;
-}
-.resultDetails > summary{
-  cursor:pointer;
-  color:#666;
-  font-size:14px;
-}
-/* ===== AI下書きカード ===== */
-.note-card{
-  border: 2px solid #111;
-  border-radius: 14px;
-  padding: 14px 14px;
-  background: #fff;
-}
-.note-text{
-  margin: 0;
-  white-space: pre-wrap;     /* 改行を活かす */
-  word-break: break-word;    /* 長文折り返し */
-  line-height: 1.6;
-  font-size: 18px;
-  font-weight: 700;
-}
-@media (max-width: 480px){
-  .note-text{ font-size: 17px; }
-}
-/* ===== 帳票プレビュー ===== */
-.paper {
-  background: #fff;
-  border: 1px solid rgba(0,0,0,0.18);
-  border-radius: 14px;
-  padding: 14px;
-}
-.paper-title{
-  text-align:center;
-  font-weight:800;
-  font-size: 18px;
-  letter-spacing: 0.08em;
-  margin: 6px 0 12px;
-}
-.paper-grid{
-  display:grid;
-  grid-template-columns: 120px 1fr 140px 1fr 120px 1fr;
-  gap: 0;
-  border: 2px solid rgba(0,0,0,0.35);
-}
-.paper-grid .cell{
-  border-right: 2px solid rgba(0,0,0,0.35);
-  border-bottom: 2px solid rgba(0,0,0,0.35);
-  padding: 10px 10px;
-  min-height: 44px;
-  font-size: 14px;
-  line-height: 1.3;
-}
-.paper-grid .cell:nth-child(6n){
-  border-right: none;
-}
-.paper-grid .label{
-  background: #f7f3ef;
-  font-weight: 700;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  text-align:center;
-}
-.paper-grid .value{
-  background:#fff;
-}
-.paper-grid .tall{
-  min-height: 160px;
-  white-space: pre-wrap;
-}
-.pill{
-  display:inline-block;
-  border: 1px solid rgba(0,0,0,0.25);
-  border-radius: 999px;
-  padding: 4px 10px;
-  margin-right: 6px;
-  font-size: 12px;
-}
-@media print{
-  body{ background:#fff !important; }
-  .topbar, .card:not(#printCard){ display:none !important; }
-  #printCard{ display:block !important; }
-  .paper{ border:none; padding:0; }
-}
+@media (max-width: 380px) {
+  .topbar {
+    flex-wrap: wrap;
+  }
 
-/* 実行中ボタンの見た目（任意） */
-button.is-busy {
-  opacity: 0.7;
-  cursor: progress;
-}
-
-/* モーダルが hidden の時はクリックを必ず通す（重要） */
-#confirmModal[aria-hidden="true"] {
-  display: none !important;
-  pointer-events: none !important;
-}
-
-/* ===== confirm modal click safety ===== */
-#confirmModal {
-  display: none;
-  pointer-events: none; /* 閉じてる時は絶対クリックを奪わない */
-}
-#confirmModal.is-open {
-  display: flex;
-  pointer-events: auto;
-}
-
-/* save disabled styling */
-button.is-disabled,
-button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-.is-disabled {
-  opacity: 0.55;
-  cursor: not-allowed;
-}
-
-button.is-busy {
-  opacity: 0.75;
-  cursor: progress;
+  .topbar h1 {
+    width: 100%;
+    font-size: 16px;
+  }
 }

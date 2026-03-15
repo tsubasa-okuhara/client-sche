@@ -4,13 +4,13 @@ TS + Supabase カレンダー 開発ドキュメント（helpers版）
 
 【0. フォルダ構成】
 client-sche/
-  public/helpers/
-    index.html
-    style.css
-    src/main.ts
-    dist/main.js
-  tsconfig.json
-  docs/
+public/helpers/
+index.html
+style.css
+src/main.ts
+dist/main.js
+tsconfig.json
+docs/
 
 【1. dist/main.js が動いていなかった問題】
 原因: index.html の script 読み込みがコメントアウトされていた。
@@ -27,6 +27,7 @@ client-sche/
 【4. supabase is not defined】
 原因: CDN より先に main.js を読み込んでいた
 解決:
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="./dist/main.js"></script>
 
@@ -52,12 +53,13 @@ supabase.createClient を使い、2025-12 を表示するロジック
 
 【10. 成功パターン CSS（白いカード）】
 .schedule-item {
-  background: #fff;
-  border-left: 4px solid #f78da7;
-  border-radius: 6px;
+background: #fff;
+border-left: 4px solid #f78da7;
+border-radius: 6px;
 }
 
 【11. 全体チェックリスト】
+
 - dist/main.js を正しく読み込めているか？
 - CDN の順番は正しいか？
 - Supabase のキーは全文か？

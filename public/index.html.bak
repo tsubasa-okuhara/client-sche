@@ -1,4 +1,4 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="ja">
   <head>
     <meta charset="utf-8" />
@@ -22,19 +22,12 @@
       }
 
       body {
-        font-family:
-          system-ui,
-          -apple-system,
-          BlinkMacSystemFont,
-          "Segoe UI",
-          "Hiragino Sans",
-          "YuGothic",
-          sans-serif;
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+          "Hiragino Sans", "YuGothic", sans-serif;
         max-width: 920px;
         margin: 26px auto;
         padding: 0 16px 44px;
-        background:
-          radial-gradient(
+        background: radial-gradient(
             900px 380px at 20% 0%,
             rgba(255, 122, 162, 0.18),
             transparent 60%
@@ -109,9 +102,7 @@
         padding: 16px;
         background: linear-gradient(180deg, #fff, #fff3cf);
         box-shadow: 0 10px 22px rgba(40, 10, 70, 0.06);
-        transition:
-          transform 0.08s ease,
-          box-shadow 0.12s ease,
+        transition: transform 0.08s ease, box-shadow 0.12s ease,
           border-color 0.12s ease;
         position: relative;
         overflow: hidden;
@@ -188,12 +179,7 @@
           </div>
         </a>
 
-        <a
-          class="cardLink"
-          href="https://ito0610.github.io/shift-app-mock001/"
-          target="_blank"
-          rel="noopener"
-        >
+        <a class="cardLink" href="/helper-shift/">
           <div class="navCard">
             <div class="navTitle">✏️ 希望シフト記入</div>
             <p class="navDesc">希望シフトを Supabase へ送信。</p>
@@ -215,21 +201,20 @@
         <a class="cardLink" href="/service-records/">
           <div class="navCard">
             <div class="navTitle">📝 サービス記録</div>
-            <p class="navDesc">サービス提供の記録を入力・確認。</p>
+            <p class="navDesc">
+              サービス提供の記録を入力・確認。
+            </p>
             <span class="cta">開く</span>
           </div>
         </a>
 
         <!-- サービス記録（試験：管理者だけ表示） -->
-        <a
-          class="cardLink"
-          href="/service-records-test/"
-          id="service-records-test-card"
-          style="display: none"
-        >
+        <a class="cardLink" href="/service-records-test/" id="service-records-test-card" style="display:none;">
           <div class="navCard">
             <div class="navTitle">🧪 サービス記録（試験）</div>
-            <p class="navDesc">管理者用の検証ページ。</p>
+            <p class="navDesc">
+              管理者用の検証ページ。
+            </p>
             <span class="cta">開く</span>
           </div>
         </a>

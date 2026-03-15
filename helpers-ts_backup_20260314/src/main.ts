@@ -20,10 +20,11 @@ declare global {
 }
 
 // ===== ここから設定値（必要に応じて変える） =====
-const today = new Date();
+const TARGET_YEAR = 2025;
+const TARGET_MONTH = 12; // 1〜12 月
 
-let currentYear: number = today.getFullYear();
-let currentMonth: number = today.getMonth() + 1;
+let currentYear: number = TARGET_YEAR;
+let currentMonth: number = TARGET_MONTH;
 let currentHelperFilter: string | null = null;
 let currentViewMode: "month" | "week" | "day" = "month";
 let currentFocusedDate: string | null = null; // "YYYY-MM-DD"
@@ -62,33 +63,21 @@ function groupByDateMerged(rows: MergedRow[]) {
   );
 }
 
-/** schedule テーブル1行を MergedRow に正規化。name を helpers: [name] にする */
 function normalizeMergedFromView(row: any): MergedRow {
-  console.log("normalize row:", row);
-
-  const helpersFromName =
-    row.name != null && String(row.name).trim() !== ""
-      ? [String(row.name).trim()]
-      : [];
-
-  const normalized = {
+  return {
     date: row.date,
     client: row.client,
     start_time: row.start_time,
     end_time: row.end_time,
     task: row.task,
     sheet_name: null,
-    helpers: helpersFromName,
-    ...(row.helper_email != null && { helper_email: row.helper_email }),
-    ...(row.haisha != null && { haisha: row.haisha }),
-    ...(row.summary != null && { summary: row.summary }),
-    ...(row.beneficiary_number != null && {
-      beneficiary_number: row.beneficiary_number,
-    }),
+    helpers: row.helpers
+      ? String(row.helpers)
+          .split("・")
+          .map((h) => h.trim())
+          .filter((h) => h.length > 0)
+      : [],
   };
-
-  console.log("normalized row:", normalized);
-  return normalized;
 }
 
 function isDateInCurrentView(
@@ -185,19 +174,11 @@ function renderCalendar(
         const start = row.start_time ?? "";
         const end = row.end_time ?? "";
         const task = row.task ?? "";
-        const haisha = row.haisha != null ? String(row.haisha).trim() : "";
-        const summary = row.summary != null ? String(row.summary).trim() : "";
-        const summaryHtml =
-          summary !== ""
-            ? `<span class="schedule-summary-text">概要: ${summary}</span>`
-            : `<span class="schedule-summary-empty">⚠️ 概要なし</span>`;
         itemDiv.innerHTML =
-          `<div class="helpers-line"><span class="${helpersClass}">${helpersText}</span></div>` +
-          `<div class="schedule-card-line">利用者: <strong>${clientName}</strong></div>` +
-          `<div class="schedule-card-line">時間: ${start}〜${end}</div>` +
-          `<div class="schedule-card-line">配車: ${haisha || "—"}</div>` +
-          `<div class="schedule-card-line">内容: ${task}</div>` +
-          `<div class="schedule-card-line schedule-summary">${summaryHtml}</div>`;
+          `<div class=\"helpers-line\"><span class=\"${helpersClass}\">` +
+          `${helpersText}</span></div>` +
+          `<div><strong>${clientName}</strong></div>` +
+          `<div>${start}〜${end}　${task}</div>`;
         list.appendChild(itemDiv);
       }
       td.appendChild(list);
@@ -239,90 +220,6 @@ function getWeeklyRangesForMonth(year: number, month: number) {
     start += 7;
   }
   return weeks;
-}
-
-/** 下部ナビ（月ラベル・週セレクタ・ミニカレンダー）を描画。既存の currentYear/currentMonth に連動 */
-function renderBottomNav(year: number, month: number) {
-  const monthLabelBottom = document.getElementById("month-label-bottom");
-  const weekSelectorBottom = document.getElementById("week-selector-bottom");
-  const miniCalendarBottom = document.getElementById("mini-calendar-bottom");
-
-  if (monthLabelBottom) {
-    monthLabelBottom.textContent = `${year}年${month}月`;
-  }
-
-  if (weekSelectorBottom) {
-    const weeks = getWeeklyRangesForMonth(year, month);
-    weekSelectorBottom.innerHTML = "";
-    weeks.forEach((range, index) => {
-      const btn = document.createElement("button");
-      btn.type = "button";
-      btn.textContent = `${index + 1}週目`;
-      btn.className = "week-selector-btn";
-      const isActive =
-        currentViewMode === "week" &&
-        currentFocusedDate != null &&
-        currentFocusedDate >= range.from &&
-        currentFocusedDate <= range.to;
-      if (isActive) btn.classList.add("active");
-      btn.addEventListener("click", () => {
-        currentFocusedDate = range.from;
-        currentViewMode = "week";
-        loadSchedulesForMonth(currentYear, currentMonth);
-      });
-      weekSelectorBottom.appendChild(btn);
-    });
-  }
-
-  if (miniCalendarBottom) {
-    const firstDate = new Date(year, month - 1, 1);
-    const firstDay = firstDate.getDay();
-    const daysInMonth = new Date(year, month, 0).getDate();
-    miniCalendarBottom.innerHTML = "";
-    let day = 1;
-    for (let week = 0; week < 6; week++) {
-      const row = document.createElement("div");
-      row.className = "mini-calendar-row";
-      for (let dow = 0; dow < 7; dow++) {
-        const cell = document.createElement("span");
-        cell.className = "mini-calendar-cell";
-        if ((week === 0 && dow < firstDay) || day > daysInMonth) {
-          cell.textContent = "";
-        } else {
-          const dateStr = `${year}-${String(month).padStart(2, "0")}-${String(
-            day,
-          ).padStart(2, "0")}`;
-          cell.textContent = String(day);
-          cell.dataset.date = dateStr;
-          if (
-            currentViewMode === "day" &&
-            currentFocusedDate != null &&
-            currentFocusedDate === dateStr
-          ) {
-            cell.classList.add("active");
-          }
-          cell.addEventListener("click", () => {
-            currentFocusedDate = dateStr;
-            currentViewMode = "day";
-            const source = Array.isArray(window.__allMerged)
-              ? window.__allMerged
-              : [];
-            const items = source.filter((r) => r.date === dateStr);
-            items.sort(
-              (a, b) =>
-                timeToMinutes(a.start_time) - timeToMinutes(b.start_time),
-            );
-            openDayPopup(dateStr, items);
-            loadSchedulesForMonth(currentYear, currentMonth);
-          });
-          day++;
-        }
-        row.appendChild(cell);
-      }
-      miniCalendarBottom.appendChild(row);
-      if (day > daysInMonth) break;
-    }
-  }
 }
 
 // ヘルパー名＋日付（例: "奥原21"）を分解
@@ -470,37 +367,30 @@ function getDateRangeForView(year: number, month: number) {
 async function loadSchedulesForMonth(year: number, month: number) {
   try {
     setStatus(`Supabase から ${year}年${month}月 の予定を取得中…`);
-
     let ranges: { from: string; to: string }[];
     if (currentViewMode === "week") {
       ranges = [getDateRangeForView(year, month)];
     } else {
       ranges = getWeeklyRangesForMonth(year, month);
     }
-
     const allRows: any[] = [];
-
     for (const range of ranges) {
       const from = range.from;
       const to = range.to;
-
       let query = client
-        .from("schedule")
+        .from("v_schedule_merged")
         .select(
-          "date, name, helper_email, client, start_time, end_time, haisha, task, summary, beneficiary_number",
+          "date, client, start_time, end_time, task, helpers, helper_count",
         )
         .gte("date", from)
         .lte("date", to);
-
       if (currentHelperFilter && currentHelperFilter.trim() !== "") {
         const key = currentHelperFilter.trim();
-        query = query.eq("name", key);
+        query = query.ilike("helpers", `%${key}%`);
       }
-
       const { data, error } = await query
         .order("date", { ascending: true })
         .limit(5000);
-
       console.log(
         "range fetch:",
         from,
@@ -509,8 +399,6 @@ async function loadSchedulesForMonth(year: number, month: number) {
         "rows:",
         data ? data.length : 0,
       );
-      console.log("raw data sample:", data ? data.slice(0, 5) : data);
-
       if (error) {
         console.error("loadSchedulesForMonth error:", error);
         setStatus(
@@ -520,31 +408,19 @@ async function loadSchedulesForMonth(year: number, month: number) {
         );
         return;
       }
-
-      if (data && data.length > 0) {
-        allRows.push(...data);
-      }
+      if (data && data.length > 0) allRows.push(...data);
     }
-
     if (allRows.length === 0) {
       setStatus(`${year}年${month}月 のデータが 0 件でした。`);
       const emptyGrouped = {} as Record<string, MergedRow[]>;
       renderCalendar(year, month, emptyGrouped);
-      renderBottomNav(year, month);
       return;
     }
-
     console.log("fetched total rows:", allRows.length);
-
     const merged = allRows.map(normalizeMergedFromView);
-    console.log("merged sample:", merged.slice(0, 5));
-
     window.__allMerged = merged;
     const grouped = groupByDateMerged(merged as MergedRow[]);
-    console.log("grouped keys:", Object.keys(grouped).slice(0, 10));
-
     renderCalendar(year, month, grouped);
-    renderBottomNav(year, month);
     setStatus(`取得完了: ${merged.length} 件`);
   } catch (err) {
     console.error(err);
@@ -592,75 +468,9 @@ function handleSearchInput(helperFilterEl: HTMLInputElement | null) {
   loadSchedulesForMonth(currentYear, currentMonth);
 }
 
-/** その日の予定をポップアップ表示。window.__allMerged から抽出した sortedItems を表示 */
-function openDayPopup(dateStr: string, sortedItems: MergedRow[]) {
-  let dialog = document.getElementById("dayPopup") as HTMLDialogElement | null;
-  if (!dialog) {
-    dialog = document.createElement("dialog");
-    dialog.id = "dayPopup";
-    dialog.className = "day-popup";
-    document.body.appendChild(dialog);
-  }
-
-  const title = document.createElement("h3");
-  title.className = "day-popup-title";
-  title.textContent = `${dateStr} の予定`;
-
-  const list = document.createElement("div");
-  list.className = "day-popup-list";
-
-  if (!sortedItems || sortedItems.length === 0) {
-    const empty = document.createElement("p");
-    empty.className = "day-popup-empty";
-    empty.textContent = "この日の予定はありません。";
-    list.appendChild(empty);
-  } else {
-    for (const row of sortedItems) {
-      const helpersLabel = (row.helpers || []).join("・");
-      const start = row.start_time ?? "";
-      const end = row.end_time ?? "";
-      const clientName = row.client ?? "";
-      const haisha = row.haisha != null ? String(row.haisha).trim() : "";
-      const task = row.task ?? "";
-      const summary = row.summary != null ? String(row.summary).trim() : "";
-
-      const item = document.createElement("div");
-      item.className = "day-popup-item";
-      const summaryHtml =
-        summary !== ""
-          ? `<span class="day-popup-summary-text">概要: ${summary}</span>`
-          : `<span class="day-popup-summary-empty">⚠️ 概要なし</span>`;
-      item.innerHTML =
-        `<div class="day-popup-line day-popup-helper">${helpersLabel}</div>` +
-        `<div class="day-popup-line day-popup-client">利用者: ${clientName}</div>` +
-        `<div class="day-popup-line day-popup-time">${start}〜${end}</div>` +
-        `<div class="day-popup-line day-popup-haisha">配車: ${haisha || "—"}</div>` +
-        `<div class="day-popup-line day-popup-task">内容: ${task}</div>` +
-        `<div class="day-popup-line day-popup-summary">${summaryHtml}</div>`;
-      list.appendChild(item);
-    }
-  }
-
-  const closeBtn = document.createElement("button");
-  closeBtn.type = "button";
-  closeBtn.className = "day-popup-close";
-  closeBtn.textContent = "閉じる";
-  closeBtn.addEventListener("click", () => dialog && dialog.close());
-
-  dialog.innerHTML = "";
-  dialog.appendChild(title);
-  dialog.appendChild(list);
-  dialog.appendChild(closeBtn);
-
-  try {
-    dialog.showModal();
-  } catch (e) {
-    alert(
-      sortedItems && sortedItems.length > 0
-        ? `${dateStr} の予定 ${sortedItems.length} 件`
-        : "この日の予定はありません。",
-    );
-  }
+function openDayPopup(_dateStr: string, _sortedItems: MergedRow[]) {
+  // ポップアップ実装は後で
+  console.log("openDayPopup", _dateStr, _sortedItems.length);
 }
 
 // 初期化
@@ -674,29 +484,24 @@ function init() {
     "helper-filter",
   ) as HTMLInputElement | null;
   const applyFilterBtn = document.getElementById("apply-helper-filter");
-  const goPrevMonth = () => {
-    currentMonth -= 1;
-    if (currentMonth < 1) {
-      currentMonth = 12;
-      currentYear -= 1;
-    }
-    loadSchedulesForMonth(currentYear, currentMonth);
-  };
-  const goNextMonth = () => {
-    currentMonth += 1;
-    if (currentMonth > 12) {
-      currentMonth = 1;
-      currentYear += 1;
-    }
-    loadSchedulesForMonth(currentYear, currentMonth);
-  };
-  if (prevMonthBtn) prevMonthBtn.addEventListener("click", goPrevMonth);
-  if (nextMonthBtn) nextMonthBtn.addEventListener("click", goNextMonth);
-
-  const prevMonthBtnBottom = document.getElementById("prev-month-btn-bottom");
-  const nextMonthBtnBottom = document.getElementById("next-month-btn-bottom");
-  if (prevMonthBtnBottom) prevMonthBtnBottom.addEventListener("click", goPrevMonth);
-  if (nextMonthBtnBottom) nextMonthBtnBottom.addEventListener("click", goNextMonth);
+  if (prevMonthBtn)
+    prevMonthBtn.addEventListener("click", () => {
+      currentMonth -= 1;
+      if (currentMonth < 1) {
+        currentMonth = 12;
+        currentYear -= 1;
+      }
+      loadSchedulesForMonth(currentYear, currentMonth);
+    });
+  if (nextMonthBtn)
+    nextMonthBtn.addEventListener("click", () => {
+      currentMonth += 1;
+      if (currentMonth > 12) {
+        currentMonth = 1;
+        currentYear += 1;
+      }
+      loadSchedulesForMonth(currentYear, currentMonth);
+    });
   if (viewMonth)
     viewMonth.addEventListener("click", () => {
       currentViewMode = "month";

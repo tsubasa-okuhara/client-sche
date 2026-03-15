@@ -1,0 +1,281 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>研修 点呼（参加/不参加）</title>
+    <style>
+      body {
+        margin: 0;
+        padding: 16px;
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Yu Gothic",
+          Meiryo, system-ui, sans-serif;
+        color: #111827;
+        background: #f7f7f9;
+      }
+      h1 {
+        font-size: 18px;
+        margin: 0 0 16px;
+      }
+      .card {
+        background: #fff;
+        border: 1px solid #e5e7eb;
+        border-radius: 10px;
+        padding: 16px;
+      }
+      label {
+        display: block;
+        font-size: 12px;
+        color: #6b7280;
+        margin: 10px 0 6px;
+      }
+      input,
+      select,
+      textarea {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        font-size: 14px;
+        box-sizing: border-box;
+      }
+      textarea {
+        min-height: 90px;
+      }
+      button {
+        width: 100%;
+        margin-top: 14px;
+        padding: 12px 10px;
+        border: none;
+        border-radius: 8px;
+        background: #2563eb;
+        color: #fff;
+        font-size: 15px;
+        cursor: pointer;
+      }
+      .status {
+        margin-top: 12px;
+        font-size: 13px;
+      }
+      .status.ok {
+        color: #0f766e;
+      }
+      .status.err {
+        color: #b91c1c;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>研修 点呼（参加/不参加）</h1>
+    <div class="card">
+      <div id="trainingMeta" style="margin-bottom: 12px">
+        <div>開催日時/場所：<span id="metaLabel">読み込み中...</span></div>
+        <div
+          id="metaNotice"
+          style="
+            display: none;
+            color: #b91c1c;
+            font-weight: 600;
+            margin-top: 6px;
+            line-height: 1.5;
+            white-space: pre-line;
+          "
+        ></div>
+        <div>研修名：<span id="metaTitle">読み込み中...</span></div>
+        <details style="margin-top: 8px">
+          <summary style="cursor: pointer; color: #2563eb; font-weight: 600">
+            研修内容（タップで表示）
+          </summary>
+          <div id="metaContent" style="margin-top: 6px; white-space: pre-line">
+            読み込み中...
+          </div>
+        </details>
+      </div>
+
+      <label for="name">氏名（必須）</label>
+      <select id="nameSelect" style="display: none"></select>
+      <input id="name" type="text" placeholder="例）山田 太郎" />
+
+      <label for="training_attendance">研修参加（必須）</label>
+      <select id="training_attendance">
+        <option value="">選択してください</option>
+        <option value="参加">参加</option>
+        <option value="不参加">不参加</option>
+      </select>
+
+      <label>懇親会参加（必須）</label><br />
+      <select id="party">
+        <option value="">選択してください</option>
+        <option value="参加">参加</option>
+        <option value="不参加">不参加</option>
+      </select>
+      <br /><br />
+
+      <label for="note">メモ（任意）</label>
+      <textarea id="note" placeholder="任意で入力してください"></textarea>
+
+      <label style="margin-top: 14px">
+        <input id="consentCheck" type="checkbox" />
+        <span id="consentText">本点呼は研修参加確認として提出します。</span>
+      </label>
+
+      <button id="submitBtn" type="button" onclick="submitAttendance()">
+        送信
+      </button>
+      <div id="msg" class="status"></div>
+    </div>
+
+    <script>
+      const $ = (id) => document.getElementById(id);
+      const statusEl = $("msg");
+      const submitBtn = $("submitBtn");
+      let submitted = false;
+
+      function setStatus(text, ok) {
+        statusEl.textContent = text;
+        statusEl.className = "status " + (ok ? "ok" : "err");
+      }
+
+      function showNameInputFallback() {
+        $("nameSelect").style.display = "none";
+        $("name").style.display = "block";
+      }
+
+      window.addEventListener("DOMContentLoaded", () => {
+        // 初期化（ボタン）
+        submitBtn.disabled = false;
+        submitBtn.textContent = "送信";
+        submitted = false;
+
+        // 研修メタ情報
+        google.script.run
+          .withSuccessHandler((res) => {
+            if (res && res.ok) {
+              $("metaLabel").textContent = res.training_label || "未設定";
+              $("metaTitle").textContent = res.training_title || "未設定";
+              $("metaContent").textContent = res.training_content || "未設定";
+              $("consentText").textContent =
+                "本点呼は、" +
+                (res.training_label || "研修") +
+                " の研修参加確認として提出します。";
+              const notice = String(res.notice || "").trim();
+              if (notice) {
+                $("metaNotice").style.display = "block";
+                $("metaNotice").textContent = notice;
+              } else {
+                $("metaNotice").style.display = "none";
+                $("metaNotice").textContent = "";
+              }
+            } else {
+              $("metaLabel").textContent = "未設定";
+              $("metaTitle").textContent = "未設定";
+              $("metaContent").textContent = "未設定";
+              $("metaNotice").style.display = "none";
+              $("metaNotice").textContent = "";
+            }
+          })
+          .withFailureHandler(() => {
+            $("metaLabel").textContent = "未設定";
+            $("metaTitle").textContent = "未設定";
+            $("metaContent").textContent = "未設定";
+            $("metaNotice").style.display = "none";
+            $("metaNotice").textContent = "";
+          })
+          .attendance_getMeta();
+
+        // 名簿取得（成功時だけプルダウン表示 / 失敗時は手入力）
+        google.script.run
+          .withSuccessHandler((res) => {
+            if (res && res.ok && Array.isArray(res.names) && res.names.length) {
+              const select = $("nameSelect");
+              select.innerHTML = "";
+
+              const placeholder = document.createElement("option");
+              placeholder.value = "";
+              placeholder.textContent = "選択してください";
+              select.appendChild(placeholder);
+
+              res.names.forEach((name) => {
+                const clean = String(name || "")
+                  .trim()
+                  .replace(/様$/, "");
+                if (!clean) return;
+                const opt = document.createElement("option");
+                opt.value = clean;
+                opt.textContent = clean;
+                select.appendChild(opt);
+              });
+
+              select.style.display = "block";
+              $("name").style.display = "none";
+            } else {
+              showNameInputFallback();
+            }
+          })
+          .withFailureHandler(() => {
+            showNameInputFallback();
+          })
+          .attendance_listNames();
+      });
+
+      function submitAttendance() {
+        if (submitted) return;
+
+        const rawName =
+          $("nameSelect").style.display === "block"
+            ? $("nameSelect").value
+            : $("name").value.trim();
+
+        const nameValue = String(rawName || "")
+          .trim()
+          .replace(/様$/, "");
+
+        const payload = {
+          name: nameValue,
+          training_attendance: $("training_attendance").value,
+          party_attendance: $("party").value,
+          note: $("note").value.trim(),
+          user_agent: navigator.userAgent,
+        };
+
+        if (!payload.name) return setStatus("氏名は必須です。", false);
+        if (!payload.training_attendance)
+          return setStatus("研修参加を選択してください。", false);
+        if (!payload.party_attendance)
+          return setStatus("懇親会参加を選択してください。", false);
+        if (!$("consentCheck").checked)
+          return setStatus("同意チェックが必要です。", false);
+
+        submitted = true;
+        submitBtn.disabled = true;
+        submitBtn.textContent = "送信中...";
+        setStatus("送信中...", true);
+
+        google.script.run
+          .withSuccessHandler((res) => {
+            if (res && res.ok) {
+              setStatus(res.message || "送信しました。", true);
+              $("note").value = "";
+              // 成功後は固定
+              submitted = true;
+              submitBtn.disabled = true;
+              submitBtn.textContent = "送信済み";
+            } else {
+              setStatus((res && res.message) || "送信に失敗しました。", false);
+              submitted = false;
+              submitBtn.disabled = false;
+              submitBtn.textContent = "送信";
+            }
+          })
+          .withFailureHandler((err) => {
+            setStatus("送信に失敗しました: " + err, false);
+            submitted = false;
+            submitBtn.disabled = false;
+            submitBtn.textContent = "送信";
+          })
+          .attendance_submit(payload);
+      }
+    </script>
+  </body>
+</html>

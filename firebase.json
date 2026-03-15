@@ -23,6 +23,10 @@
         "headers": [{ "key": "Cache-Control", "value": "no-store" }]
       },
       {
+        "source": "/service-records-home/**",
+        "headers": [{ "key": "Cache-Control", "value": "no-store" }]
+      },
+      {
         "source": "/helper-shift/**",
         "headers": [{ "key": "Cache-Control", "value": "no-store" }]
       },
@@ -36,12 +40,37 @@
       }
     ],
     "rewrites": [
-      { "source": "/api/training", "function": "trainingProxy" },
+      {
+        "source": "/api/home-schedule-tasks/pending",
+        "function": { "functionId": "getHomeScheduleTasksPending", "region": "asia-northeast1" }
+      },
+      {
+        "source": "/api/home-service-check-items",
+        "function": { "functionId": "getHomeServiceCheckItems", "region": "asia-northeast1" }
+      },
+      {
+        "source": "/api/home-service-records/latest",
+        "function": { "functionId": "getHomeServiceRecordLatest", "region": "asia-northeast1" }
+      },
+      {
+        "source": "/api/home-service-records",
+        "function": { "functionId": "postHomeServiceRecord", "region": "asia-northeast1" }
+      },
+      {
+        "source": "/api/training",
+        "function": { "functionId": "trainingProxy", "region": "asia-northeast1" }
+      },
+      {
+        "source": "/api/training-report",
+        "run": { "serviceId": "training-service", "region": "asia-northeast1" }
+      },
+
       {
         "source": "/takizawa_schedule/**",
         "destination": "/takizawa_schedule/index.html"
       },
       { "source": "/helpers/**", "destination": "/helpers/index.html" },
+
       {
         "source": "/service-records-admin/**",
         "destination": "/service-records-admin/index.html"
@@ -50,19 +79,26 @@
         "source": "/service-records/**",
         "destination": "/service-records/index.html"
       },
-      {
-        "source": "/service-records-test/**",
-        "destination": "/service-records/index.html"
-      },
+
       {
         "source": "/service-records-test/**",
         "destination": "/service-records-test/index.html"
       },
       {
+        "source": "/service-records-home/**",
+        "destination": "/service-records-home/index.html"
+      },
+      {
+        "source": "/service-records-top/**",
+        "destination": "/service-records-top/index.html"
+      },
+
+      {
         "source": "/helper-shift/**",
         "destination": "/helper-shift/index.html"
       },
       { "source": "/tamari/**", "destination": "/tamari/index.html" },
+
       { "source": "**", "destination": "/index.html" }
     ]
   }

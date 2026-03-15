@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ja">
   <head>
     <meta charset="UTF-8" />
@@ -16,8 +16,6 @@
       href="./apple-touch-icon.png"
     />
     <link rel="manifest" href="./manifest.json" />
-    <script type="module" crossorigin src="/helpers/assets/index-Z8rhSRcE.js"></script>
-    <link rel="stylesheet" crossorigin href="/helpers/assets/index-Bx15ImVO.css">
   </head>
 
   <body>
@@ -49,22 +47,6 @@
       </div>
     </div>
 
-    <div id="calendar-nav-bottom" class="calendar-nav-top-inline" aria-label="週・日付ジャンプ">
-      <div class="calendar-nav-bottom-inner">
-        <p class="calendar-nav-bottom-label">
-          <span id="month-label-bottom"></span>
-        </p>
-        <div class="week-selector" id="week-selector-bottom"></div>
-        <div class="mini-calendar-wrap">
-          <div class="mini-calendar" id="mini-calendar-bottom"></div>
-        </div>
-        <div class="calendar-nav-bottom-buttons">
-          <button type="button" id="prev-month-btn-bottom">◀ 前月</button>
-          <button type="button" id="next-month-btn-bottom">次月 ▶</button>
-        </div>
-      </div>
-    </div>
-
     <div class="calendar-wrapper">
       <table class="calendar">
         <thead>
@@ -83,6 +65,7 @@
     </div>
 
     <!-- Vite will inject the module script -->
+    <script type="module" src="/src/main.ts"></script>
   </body>
   <!-- 検索ポップアップ -->
   <div id="searchModal" class="modal" aria-hidden="true">

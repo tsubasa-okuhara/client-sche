@@ -1,443 +1,118 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ja">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>サービス記録（試験）</title>
+    <title>移動支援サービス記録</title>
     <link rel="stylesheet" href="./style.css" />
   </head>
   <body>
     <header class="topbar">
-      <a class="back" href="https://client-sche.web.app/">← ひろばに戻る</a>
-      <h1>サービス記録（試験）</h1>
+      <a class="back" href="../service-records-top/">← サービス記録トップへ</a>
+      <h1>移動支援サービス記録</h1>
     </header>
 
     <main class="wrap">
-      <section class="card">
-        <h2>ログイン（マジックリンク）</h2>
-        <p class="hint">3ステップでログインできます</p>
-        <ol class="steps">
-          <li>メールアドレス入力 →「リンク送信」</li>
-          <li>受信メールのリンクを「同じ端末・同じブラウザ」で開く</li>
-          <li>この画面に戻って「ログイン確認」</li>
-        </ol>
-        <p class="note">
-          リンクを別端末/別ブラウザで開くと未ログインのままになります
-        </p>
-        <div class="row">
-          <input id="email" type="email" placeholder="メールアドレス" />
-          <button id="sendLink">リンク送信</button>
-          <button id="checkSession" class="ghost">ログイン確認</button>
-          <button id="logout" class="danger ghost">ログアウト</button>
-        </div>
-        <p id="authStatus" class="status"></p>
-      </section>
-
-      <section class="card">
-        <h2>1) サービス記録 未記入一覧</h2>
-        <p class="hint">未記入（未作成）の予定だけ表示します。記録する予定を1つ選んでください。</p>
-        <div class="row">
-          <button id="loadMoves">未記入一覧を読み込む</button>
-        </div>
+      <!-- 未記入予定一覧 -->
+      <section class="card listSection">
+        <h2>未記入予定一覧</h2>
+        <p class="hint">記録する予定を選んで「記録する」を押してください。</p>
+        <div id="movesMessage" class="status movesMessage"></div>
         <div id="movesList" class="movesList"></div>
-        <!-- 予定一覧の取得件数/期間などの表示（main.js が参照） -->
-        <div id="movesResult" class="status"></div>
-        <p id="movesSelected" class="status">選択中の予定：なし</p>
       </section>
 
-      <section id="fnCard" class="card" style="display: none">
-        <h2>2) チェックとメモ</h2>
-        <p class="hint">状態やトイレの状況、短いメモを入力してください。</p>
+      <!-- 記録入力フォーム（選択時のみ表示） -->
+      <section id="formCard" class="card formCard" style="display: none">
+        <h2>記録入力</h2>
+        <p id="formSelectedLabel" class="hint">選択中の予定に対して記録を入力します。</p>
 
-        <div class="row">
-          <label class="label">行き先（出発→到着）</label>
-          <input id="routeInput" placeholder="例：自宅→まごめ園" />
+        <!-- 固定表示 -->
+        <div class="formFixed">
+          <div class="formFixedRow"><span class="formLabel">利用者名</span><span id="dispClientName" class="formValue">—</span></div>
+          <div class="formFixedRow"><span class="formLabel">時間</span><span id="dispTime" class="formValue">—</span></div>
+          <div class="formFixedRow"><span class="formLabel">ヘルパー名</span><span id="dispHelperName" class="formValue">—</span></div>
+          <div class="formFixedRow"><span class="formLabel">配車</span><span id="dispRoute" class="formValue">—</span></div>
+          <div class="formFixedRow"><span class="formLabel">内容</span><span id="dispNote" class="formValue">—</span></div>
+          <div class="formFixedRow"><span class="formLabel">受給者番号</span><span id="dispBeneficiary" class="formValue">—</span></div>
         </div>
 
-        <div class="checkCard">
-          <div class="checkTitle">記録する項目（大枠）</div>
-          <div class="checkGrid">
-            <label
-              ><input type="checkbox" id="sec_condition" checked /> 状態</label
-            >
-            <label
-              ><input type="checkbox" id="sec_toilet" checked /> トイレ</label
-            >
-            <label><input type="checkbox" id="sec_mood" checked /> 天候</label>
-            <label
-              ><input type="checkbox" id="sec_meal" checked /> 食事・水分</label
-            >
-            <label
-              ><input type="checkbox" id="sec_medication" checked /> 服薬</label
-            >
-            <label
-              ><input type="checkbox" id="sec_familyReport" checked />
-              家族連絡</label
-            >
-          </div>
-        </div>
-
-        <div class="checkCard" id="card_condition">
-          <div class="checkTitle">状態</div>
-          <div class="checkGrid">
-            <label
-              ><input
-                type="checkbox"
-                id="cond-calm"
-                name="condition"
-                value="calm"
-              />
-              落ち着いていた</label
-            >
-            <label
-              ><input
-                type="checkbox"
-                id="cond-slightly-unstable"
-                name="condition"
-                value="slightly-unstable"
-              />
-              やや不安定</label
-            >
-            <label
-              ><input
-                type="checkbox"
-                id="cond-agitated"
-                name="condition"
-                value="agitated"
-              />
-              興奮気味</label
-            >
-            <label
-              ><input
-                type="checkbox"
-                id="cond-seizure"
-                name="condition"
-                value="seizure"
-              />
-              発作あり</label
-            >
-            <label
-              ><input
-                type="checkbox"
-                id="cond-no-seizure"
-                name="condition"
-                value="no-seizure"
-              />
-              発作なし</label
-            >
-            <label
-              ><input
-                type="checkbox"
-                id="cond-condition-changed"
-                name="condition"
-                value="condition-changed"
-              />
-              変化あり</label
-            >
-            <label
-              ><input
-                type="checkbox"
-                id="cond-condition-unchanged"
-                name="condition"
-                value="condition-unchanged"
-              />
-              変化なし</label
-            >
-          </div>
-        </div>
-
-        <div class="checkCard" id="card_toilet">
-          <div class="checkTitle">トイレ</div>
-          <div class="checkGrid">
-            <label
-              ><input
-                type="checkbox"
-                id="toilet-urination"
-                name="toilet"
-                value="urination"
-              />
-              排尿</label
-            >
-            <label
-              ><input
-                type="checkbox"
-                id="toilet-defecation"
-                name="toilet"
-                value="defecation"
-              />
-              排便</label
-            >
-            <label
-              ><input
-                type="checkbox"
-                id="toilet-both"
-                name="toilet"
-                value="both"
-              />
-              両方</label
-            >
-            <label
-              ><input
-                type="checkbox"
-                id="toilet-no-toilet"
-                name="toilet"
-                value="no-toilet"
-              />
-              なし</label
-            >
-            <label
-              ><input
-                type="checkbox"
-                id="toilet-diaper"
-                name="toilet"
-                value="diaper"
-              />
-              おむつ</label
-            >
-            <label
-              ><input
-                type="checkbox"
-                id="toilet-assist"
-                name="toilet"
-                value="assist"
-              />
-              介助</label
-            >
-          </div>
-        </div>
-
-        <div class="checkCard" id="card_mood">
-          <div class="checkTitle">天候</div>
-          <div class="checkGrid">
-            <label
-              ><input type="radio" name="mood" value="sunny" id="mood-sunny" />
-              晴れ</label
-            >
-            <label
-              ><input
-                type="radio"
-                name="mood"
-                value="cloudy-sun"
-                id="mood-cloudy-sun"
-              />
-              晴れ時々曇り</label
-            >
-            <label
-              ><input
-                type="radio"
-                name="mood"
-                value="cloudy"
-                id="mood-cloudy"
-              />
-              曇り</label
-            >
-            <label
-              ><input type="radio" name="mood" value="rainy" id="mood-rainy" />
-              雨</label
-            >
-          </div>
-        </div>
-
-        <div class="checkCard" id="card_meal">
-          <div class="checkTitle">食事・水分</div>
-          <div class="checkGrid">
-            <div>
-              <div class="checkSubTitle">食事</div>
-              <label
-                ><input
-                  type="radio"
-                  name="mealFood"
-                  value="all"
-                  id="mealFood-all"
-                />
-                全量</label
-              >
-              <label
-                ><input
-                  type="radio"
-                  name="mealFood"
-                  value="half"
-                  id="mealFood-half"
-                />
-                半量</label
-              >
-              <label
-                ><input
-                  type="radio"
-                  name="mealFood"
-                  value="none"
-                  id="mealFood-none"
-                />
-                なし</label
-              >
-            </div>
-            <div>
-              <div class="checkSubTitle">水分</div>
-              <label
-                ><input
-                  type="radio"
-                  name="mealWater"
-                  value="enough"
-                  id="mealWater-enough"
-                />
-                十分</label
-              >
-              <label
-                ><input
-                  type="radio"
-                  name="mealWater"
-                  value="lack"
-                  id="mealWater-lack"
-                />
-                不足</label
-              >
+        <!-- 入力項目 -->
+        <div class="formInputs">
+          <div class="checkCard">
+            <div class="checkTitle">状態</div>
+            <div class="checkGrid">
+              <label><input type="radio" name="condition" value="calm" /> 落ち着いていた</label>
+              <label><input type="radio" name="condition" value="slightly-unstable" /> やや不安定</label>
+              <label><input type="radio" name="condition" value="agitated" /> 興奮気味</label>
+              <label><input type="radio" name="condition" value="seizure" /> 発作あり</label>
+              <label><input type="radio" name="condition" value="condition-changed" /> 変化あり</label>
             </div>
           </div>
-        </div>
 
-        <div class="checkCard" id="card_medication">
-          <div class="checkTitle">服薬</div>
-          <div class="checkGrid">
-            <label
-              ><input
-                type="radio"
-                name="medication"
-                value="taken"
-                id="medication-taken"
-              />
-              服薬</label
-            >
-            <label
-              ><input
-                type="radio"
-                name="medication"
-                value="forgot"
-                id="medication-forgot"
-              />
-              飲み忘れ</label
-            >
-            <label
-              ><input
-                type="radio"
-                name="medication"
-                value="refused"
-                id="medication-refused"
-              />
-              拒否</label
-            >
-          </div>
-        </div>
-
-        <div class="checkCard" id="card_interaction">
-          <div class="checkTitle">交流</div>
-          <div class="checkGrid">
-            <label
-              ><input
-                type="radio"
-                name="interaction"
-                value="had"
-                id="interaction-had"
-              />
-              交流あり</label
-            >
-            <label
-              ><input
-                type="radio"
-                name="interaction"
-                value="none"
-                id="interaction-none"
-              />
-              交流なし</label
-            >
-          </div>
-        </div>
-
-        <div class="row">
-          <label class="label">メモ</label>
-          <textarea
-            id="memo"
-            rows="2"
-            placeholder="50文字以内を目安に記入"
-          ></textarea>
-        </div>
-
-        <h2 style="margin-top:14px;">3) 記録文（下書き）</h2>
-        <p class="hint">「記録文を作成」を押すと下書きが表示されます。内容を確認してから確定保存できます。</p>
-        <div class="row">
-          <button id="invoke" class="primary">記録文を作成</button>
-          <button id="saveNote" class="ghost">確定して保存</button>
-        </div>
-        <h3>記録文（AI下書き）</h3>
-        <div id="resultCard" class="note-card">
-          <pre id="resultSummary" class="note-text"></pre>
-        </div>
-        <details class="resultDetails" data-admin-only>
-          <summary>詳細（管理者向け：JSON）</summary>
-          <pre id="result" class="pre"></pre>
-        </details>
-      </section>
-
-      <!-- ===== 帳票プレビュー ===== -->
-      <section class="card" id="printCard" data-admin-only style="display:none">
-        <div class="row" style="justify-content: space-between; align-items:center;">
-          <h2 style="margin:0">帳票プレビュー</h2>
-          <button id="printBtn" class="ghost">印刷 / PDF</button>
-        </div>
-        <p class="hint">保存前の内容を帳票イメージで確認できます。</p>
-
-        <div id="paper" class="paper">
-          <div class="paper-title">サービス実施記録</div>
-
-          <div class="paper-grid">
-            <div class="cell label">事業所名</div>
-            <div class="cell value" id="pOffice">（未設定）</div>
-            <div class="cell label">利用者確認欄</div>
-            <div class="cell value" id="pClientConfirm"></div>
-            <div class="cell label">ヘルパー名</div>
-            <div class="cell value" id="pHelper"></div>
-
-            <div class="cell label">利用者名</div>
-            <div class="cell value" id="pClient"></div>
-            <div class="cell label">日付</div>
-            <div class="cell value" id="pDate"></div>
-
-            <div class="cell label">時間</div>
-            <div class="cell value" id="pTime"></div>
-            <div class="cell label">行先</div>
-            <div class="cell value" id="pDestination"></div>
-
-            <div class="cell label">主な援助内容</div>
-            <div class="cell value tall" id="pMainSupport"></div>
-            <div class="cell label">備考</div>
-            <div class="cell value tall" id="pRemarks"></div>
-
-            <div class="cell label">経路</div>
-            <div class="cell value" id="pRoute">
-              <span class="pill" id="pRouteWalk">徒歩</span>
-              <span class="pill" id="pRouteBus">バス</span>
-              <span class="pill" id="pRouteTrain">電車</span>
-              <span class="pill" id="pRouteOther">その他</span>
+          <div class="checkCard">
+            <div class="checkTitle">トイレ</div>
+            <div class="checkGrid">
+              <label><input type="radio" name="toilet" value="urination" /> 排尿</label>
+              <label><input type="radio" name="toilet" value="defecation" /> 排便</label>
+              <label><input type="radio" name="toilet" value="both" /> 両方</label>
+              <label><input type="radio" name="toilet" value="no-toilet" /> なし</label>
+              <label><input type="radio" name="toilet" value="diaper" /> おむつ</label>
+              <label><input type="radio" name="toilet" value="assist" /> 介助</label>
             </div>
+          </div>
+
+          <div class="checkCard">
+            <div class="checkTitle">天候</div>
+            <div class="checkGrid">
+              <label><input type="radio" name="weather" value="sunny" /> 晴れ</label>
+              <label><input type="radio" name="weather" value="cloudy-sun" /> 晴れ時々曇り</label>
+              <label><input type="radio" name="weather" value="cloudy" /> 曇り</label>
+              <label><input type="radio" name="weather" value="rainy" /> 雨</label>
+            </div>
+          </div>
+
+          <div class="checkCard">
+            <div class="checkTitle">食事</div>
+            <div class="checkGrid">
+              <label><input type="radio" name="meal" value="all" /> 全量</label>
+              <label><input type="radio" name="meal" value="half" /> 半量</label>
+              <label><input type="radio" name="meal" value="none" /> なし</label>
+            </div>
+          </div>
+
+          <div class="checkCard">
+            <div class="checkTitle">水分</div>
+            <div class="checkGrid">
+              <label><input type="radio" name="water" value="enough" /> 十分</label>
+              <label><input type="radio" name="water" value="lack" /> 不足</label>
+            </div>
+          </div>
+
+          <div class="checkCard">
+            <div class="checkTitle">服薬</div>
+            <div class="checkGrid">
+              <label><input type="radio" name="medication" value="taken" /> 服薬</label>
+              <label><input type="radio" name="medication" value="forgot" /> 飲み忘れ</label>
+              <label><input type="radio" name="medication" value="refused" /> 拒否</label>
+            </div>
+          </div>
+
+          <div class="checkCard">
+            <div class="checkTitle">交流</div>
+            <div class="checkGrid">
+              <label><input type="radio" name="interaction" value="yes" /> あり</label>
+              <label><input type="radio" name="interaction" value="no" /> なし</label>
+            </div>
+          </div>
+
+          <div class="formRow">
+            <label class="formLabel" for="formMemo">メモ</label>
+            <textarea id="formMemo" class="formMemo" rows="3" placeholder="自由記述（後で保存に利用します）"></textarea>
           </div>
         </div>
       </section>
     </main>
 
-    <!-- 保存確認モーダル -->
-    <div id="confirmModal" class="modal-backdrop" aria-hidden="true">
-      <div class="modal" role="dialog" aria-modal="true" aria-labelledby="confirmTitle">
-        <h3 id="confirmTitle">この内容で確定保存しますか？</h3>
-        <p class="modal-text">
-          保存後は「未記録の予定」一覧から消えます。内容に問題がなければ「確定して保存」を押してください。
-        </p>
-        <div class="modal-actions">
-          <button id="confirmCancel" class="ghost">キャンセル</button>
-          <button id="confirmOk" class="danger">確定して保存</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- iPhone古いキャッシュ対策: v を更新 -->
-    <script type="module" src="./main.js?v=print-20260105-01"></script>
+    <script type="module" src="./main.js?v=helper-20260315"></script>
   </body>
 </html>

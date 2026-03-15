@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>研修報告書（個人）</title>
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <div class="container">
+      <div class="card">
+        <h1>研修報告書（個人）</h1>
+        <p>感染症の予防及びまん延防止に関する研修（訪問系）</p>
+
+        <h2>研修情報</h2>
+        <div class="row">
+          <div>
+            <label>研修ID（選択）</label>
+            <select id="trainingId"></select>
+          </div>
+          <div>
+            <label>研修名</label>
+            <input
+              type="text"
+              id="trainingTitle"
+              readonly
+            />
+          </div>
+          <div>
+            <label>研修実施日</label>
+            <input
+              type="text"
+              id="trainingDate"
+              readonly
+            />
+          </div>
+          <div>
+            <label>開催場所</label>
+            <input
+              type="text"
+              id="trainingLocation"
+              readonly
+            />
+          </div>
+        </div>
+
+        <h2>受講者情報</h2>
+        <label>氏名（必須）</label>
+        <input type="text" id="name" placeholder="例：奥原 翼" />
+
+        <h2>理解確認</h2>
+        <div class="check">
+          <input type="checkbox" id="confirmUnderstanding" />
+          <div>
+            <div>本研修（または研修資料）を確認し、内容を理解しました。</div>
+            <div class="small">
+              ※欠席者は補足資料を確認のうえチェックしてください
+            </div>
+          </div>
+        </div>
+
+        <label>所感（任意）</label>
+        <textarea
+          id="comment"
+          placeholder="気づいた点、今後意識したいこと等（任意）"
+        ></textarea>
+
+        <h2>署名（手書き）</h2>
+        <p class="small">
+          スマホは指で署名できます。PCはマウスで署名できます。
+        </p>
+
+        <div class="sig-wrap">
+          <canvas id="sigCanvas" class="sig-pad"></canvas>
+          <div class="sig-actions">
+            <button type="button" id="btnSigClear">消す</button>
+            <button type="button" id="btnSigUndo">1つ戻す</button>
+          </div>
+        </div>
+
+        <input type="hidden" id="signatureData" />
+
+        <div class="row">
+          <div>
+            <label>記入日（自動）</label>
+            <input type="date" id="submittedOn" />
+          </div>
+          <div>
+            <label>提出区分</label>
+            <select id="attendance">
+              <option value="attended">当日参加</option>
+              <option value="absent">欠席（資料確認）</option>
+            </select>
+          </div>
+        </div>
+
+        <div id="err" class="error"></div>
+
+        <div class="actions">
+          <button class="secondary" type="button" id="btnFillToday">
+            今日を入力
+          </button>
+          <button class="primary" type="button" id="btnSubmit">送信</button>
+        </div>
+
+        <p class="small" style="margin-top: 14px">
+          管理者向け：送信先は index.html 内の
+          <code>GAS_ENDPOINT</code> を設定してください。
+        </p>
+      </div>
+    </div>
+
+    <script>
+      // 研修一覧 / 研修報告のAPI
+      const TRAINING_LIST_ENDPOINT = "/api/training-list";
+      const REPORT_ENDPOINT = "/api/training-report";
+
+      const $ = (id) => document.getElementById(id);
+
+      let trainingItems = [];
+
+      function showError(msg) {
+        const el = $("err");
+        el.style.display = "block";
+        el.textContent = msg;
+      }
+      function clearError() {
+        const el = $("err");
+        el.style.display = "none";
+        el.textContent = "";
+      }
+
+      function todayISO() {
+        const d = new Date();
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, "0");
+        const day = String(d.getDate()).padStart(2, "0");
+        return `${y}-${m}-${day}`;
+      }
+
+      async function loadTrainingList() {
+        try {
+          const res = await fetch(TRAINING_LIST_ENDPOINT, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ limit: 200 }),
+          });
+
+          if (!res.ok) {
+            const text = await res.text().catch(() => "");
+            throw new Error(`研修一覧の取得に失敗: ${res.status} ${text}`);
+          }
+
+          const data = await res.json();
+          if (!data?.ok || !Array.isArray(data.items)) {
+            throw new Error("研修一覧の形式が不正です。");
+          }
+
+          trainingItems = data.items;
+          const select = $("trainingId");
+          select.innerHTML = "";
+          trainingItems.forEach((item) => {
+            const opt = document.createElement("option");
+            opt.value = item.training_id;
+            opt.textContent = `${item.training_id}｜${item.training_title}｜${item.training_date}`;
+            select.appendChild(opt);
+          });
+
+          if (trainingItems.length > 0) {
+            select.value = trainingItems[0].training_id;
+            applyTrainingSelection();
+          }
+        } catch (e) {
+          showError(e.message || "研修一覧の取得に失敗しました。");
+        }
+      }
+
+      function applyTrainingSelection() {
+        const selectedId = $("trainingId").value;
+        const item = trainingItems.find((i) => i.training_id === selectedId);
+        if (!item) return;
+        $("trainingTitle").value = item.training_title || "";
+        $("trainingDate").value = item.training_date || "";
+        $("trainingLocation").value = item.location || "";
+      }
+
+      // --- signature pad (pointer events) ---
+      const sigCanvas = $("sigCanvas");
+      const sigDataInput = $("signatureData");
+      const btnSigClear = $("btnSigClear");
+      const btnSigUndo = $("btnSigUndo");
+
+      if (sigCanvas) {
+        const sigCtx = sigCanvas.getContext("2d");
+        const sigStrokes = [];
+        let isDrawing = false;
+
+        function setSignatureData() {
+          if (!sigDataInput) return;
+          if (sigStrokes.length === 0) {
+            sigDataInput.value = "";
+            return;
+          }
+          sigDataInput.value = sigCanvas.toDataURL("image/png");
+        }
+
+        function redrawSignature() {
+          const rect = sigCanvas.getBoundingClientRect();
+          sigCtx.clearRect(0, 0, rect.width, rect.height);
+          sigStrokes.forEach((path) => {
+            sigCtx.beginPath();
+            path.forEach((pt, i) => {
+              const x = pt.x * rect.width;
+              const y = pt.y * rect.height;
+              if (i === 0) sigCtx.moveTo(x, y);
+              else sigCtx.lineTo(x, y);
+            });
+            sigCtx.stroke();
+          });
+        }
+
+        function resizeCanvas() {
+          const rect = sigCanvas.getBoundingClientRect();
+          const dpr = window.devicePixelRatio || 1;
+          sigCanvas.width = Math.floor(rect.width * dpr);
+          sigCanvas.height = Math.floor(rect.height * dpr);
+          sigCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+          sigCtx.lineWidth = 2.2;
+          sigCtx.lineCap = "round";
+          sigCtx.lineJoin = "round";
+          sigCtx.strokeStyle = "#111827";
+          redrawSignature();
+        }
+
+        function addPointFromEvent(e) {
+          const rect = sigCanvas.getBoundingClientRect();
+          const x = (e.clientX - rect.left) / rect.width;
+          const y = (e.clientY - rect.top) / rect.height;
+          const path = sigStrokes[sigStrokes.length - 1];
+          path.push({ x, y });
+          const px = x * rect.width;
+          const py = y * rect.height;
+          if (path.length === 1) sigCtx.moveTo(px, py);
+          else sigCtx.lineTo(px, py);
+          sigCtx.stroke();
+        }
+
+        sigCanvas.addEventListener("pointerdown", (e) => {
+          if (e.pointerType === "mouse" && e.button !== 0) return;
+          isDrawing = true;
+          sigCanvas.setPointerCapture(e.pointerId);
+          sigCtx.beginPath();
+          sigStrokes.push([]);
+          addPointFromEvent(e);
+        });
+        sigCanvas.addEventListener("pointermove", (e) => {
+          if (!isDrawing) return;
+          addPointFromEvent(e);
+        });
+        sigCanvas.addEventListener("pointerup", (e) => {
+          if (!isDrawing) return;
+          isDrawing = false;
+          try {
+            sigCanvas.releasePointerCapture(e.pointerId);
+          } catch (_) {}
+          setSignatureData();
+        });
+        sigCanvas.addEventListener("pointercancel", () => {
+          if (!isDrawing) return;
+          isDrawing = false;
+          setSignatureData();
+        });
+
+        if (btnSigClear) {
+          btnSigClear.addEventListener("click", () => {
+            sigStrokes.length = 0;
+            redrawSignature();
+            setSignatureData();
+          });
+        }
+        if (btnSigUndo) {
+          btnSigUndo.addEventListener("click", () => {
+            sigStrokes.pop();
+            redrawSignature();
+            setSignatureData();
+          });
+        }
+
+        window.addEventListener("resize", resizeCanvas);
+        requestAnimationFrame(resizeCanvas);
+        setTimeout(resizeCanvas, 200);
+      }
+
+      loadTrainingList();
+
+      $("btnFillToday").addEventListener("click", () => {
+        $("submittedOn").value = todayISO();
+      });
+
+      $("trainingId").addEventListener("change", applyTrainingSelection);
+
+      $("btnSubmit").addEventListener("click", async () => {
+        clearError();
+
+        const submitBtn = $("btnSubmit");
+        const originalLabel = submitBtn.textContent;
+        submitBtn.disabled = true;
+        submitBtn.textContent = "送信中...";
+
+        const payload = {
+          training_id: $("trainingId").value,
+          training_title: $("trainingTitle").value,
+          training_date: $("trainingDate").value,
+          location: $("trainingLocation").value,
+          name: $("name").value.trim(),
+          confirm_understanding: $("confirmUnderstanding").checked,
+          attendance: $("attendance").value,
+          comment: $("comment").value.trim(),
+          submitted_on: $("submittedOn").value || todayISO(),
+          user_agent: navigator.userAgent,
+          signature_png: $("signatureData").value,
+        };
+
+        if (!payload.name) {
+          submitBtn.disabled = false;
+          submitBtn.textContent = originalLabel;
+          return showError("氏名を入力してください。");
+        }
+        if (!payload.confirm_understanding)
+          {
+            submitBtn.disabled = false;
+            submitBtn.textContent = originalLabel;
+            return showError("「内容を理解しました」にチェックしてください。");
+          }
+        if (!payload.signature_png) {
+          submitBtn.disabled = false;
+          submitBtn.textContent = originalLabel;
+          return showError("署名（手書き）を入力してください。");
+        }
+        try {
+          const res = await fetch(REPORT_ENDPOINT, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(payload),
+          });
+
+          if (!res.ok) {
+            const text = await res.text().catch(() => "");
+            throw new Error(`送信エラー: ${res.status} ${text}`);
+          }
+
+          let responseData = null;
+          try {
+            responseData = await res.json();
+          } catch (_) {
+            responseData = null;
+          }
+
+          sessionStorage.setItem(
+            "training_receipt_v1",
+            JSON.stringify({
+              name: payload.name,
+              training_title: payload.training_title,
+              training_date: payload.training_date,
+              attendance: payload.attendance,
+              submitted_on: payload.submitted_on,
+              confirm_understanding: payload.confirm_understanding,
+              comment: payload.comment,
+              signature_png: payload.signature_png,
+              request_id: responseData?.requestId ?? responseData?.request_id ?? "",
+              received_at: responseData?.receivedAt ?? responseData?.received_at ?? "",
+              file_id: responseData?.fileId ?? responseData?.file_id ?? "",
+              pdf_url: responseData?.pdfUrl ?? responseData?.pdf_url ?? "",
+            })
+          );
+
+          location.href = "./confirm.html";
+        } catch (e) {
+          showError(
+            e.message || "送信に失敗しました。通信状況をご確認ください。"
+          );
+          submitBtn.disabled = false;
+          submitBtn.textContent = originalLabel;
+        }
+      });
+    </script>
+  </body>
+</html>

@@ -1,0 +1,13 @@
+{
+  "name": "run-training",
+  "private": true,
+  "main": "index.js",
+  "type": "commonjs",
+  "engines": {
+    "node": "20"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "puppeteer-core": "^24.35.0"
+  }
+}
